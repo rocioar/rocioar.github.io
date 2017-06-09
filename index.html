@@ -6,11 +6,20 @@
     <title>schegel.net</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
+    <style>
+    .jumbotron {
+      border: solid #666;
+      border-width: 8px 0 2px 0;
+      box-shadow: 0 1px 3px #000;
+    }
+    </style>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
   </head>
-  <body>
-    <nav class="navbar navbar-toggleable-md navbar-light bg-faded navbar-inverse bg-inverse">
+  <body  style="background-color: #30628e">
+    <header class="navbar navbar-light navbar-toggleable-md bd-navbar navbar-inverse bg-inverse">
+
+    <nav class="container">
       <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -21,26 +30,86 @@
           <li class="nav-item active">
             <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">Projects</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link disabled" href="cv/en/">CV</a>
-          </li>
         </ul>
       </div>
     </nav>
-    <div class="jumbotron">
-      <div class="row">
-        <div class="col-3">
-          <img src="static/foto.jpg" style="border-radius: 25px;">
+    </header>
+    <div class="container" style='margin-top: 10px; font-family: Georgia, Garamond, "Times New Roman", Times, serif;'>
+          <!-- Jumbotron -->
+          <div class="jumbotron">
+            <div class="row">
+              <div class="col-2">
+                <img src="static/foto.jpg" style="border-radius: 25px; width:150px">
+              </div>
+              <div class="col-10">
+                <h1 class="display-3">Rocio Aramberri</h1>
+                <hr class="my-4">
+                <p>Self-taught Software Developer with <strong>5 years</strong> of experience developing in <strong>Python</strong> (libraries: Django, Django Rest Framework, Celery, Flask, Scrapy). Enjoy learning new skills and working on challenging projects.
+                </p>
+                <h2>Experience</h2>
+                <hr>
+                <div class="row">
+                  <div class="col-3">
+                    <h5>Sep 2016 - Present</h5>
+                  </div>
+                  <div class="col-9">
+                    <h4>Software Engineer</h4>
+                  <a href="http://scrapinghub.com">Scrapinghub</a>
+                  <p>In charge of internal API. Technologies used: Django, Django Rest Framework, Celery, MySQL, Docker.</p>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-3">
+                    <h5>Jan 2015 - Sep 2016</h5>
+                  </div>
+                  <div class="col-9">
+                    <h4>Head of Human Resources</h4>
+                  <a href="http://scrapinghub.com">Scrapinghub</a>
+                  <p>Built the team and processes from the ground up. Coded many tools including our internal Staff application (made in Django) in top of a github repository that we use for <a href=" https://blog.scrapinghub.com/2015/06/08/git-for-managing-vacations/">managing vacations</a>.</p>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-3">
+                    <h5>Jan 2014 - Dec 2014</h5>
+                  </div>
+                  <div class="col-9">
+                    <h4>Team Leader</h4>
+                  <a href="http://scrapinghub.com">Scrapinghub</a>
+                  <p>Technically managed a professional services team of 5 engineers working for a big US client. In charge of all technical decisions, and client interactions.</p>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-3">
+                    <h5>Jul 2013 - Dec 2013</h5>
+                  </div>
+                  <div class="col-9">
+                    <h4>Team Leader</h4>
+                  <a href="http://scrapinghub.com">Scrapinghub</a>
+                  <p>Worked developing Scrapy Spiders through different Professional Services projects.</p>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-3">
+                    <h5>Mar 2012 - Jul 2013</h5>
+                  </div>
+                  <div class="col-9">
+                    <h4>Software Developer / Sysadmin</h4>
+                  <a href="http://innuy.com">Innuy</a>
+                  <p>As one of the first employees of Innuy I was in charge of developing servicioos.com, a web application developed using Python/Django. As part of my responsibilities I architectured and administered the infrastructure in order for this application to run. Technologies I used include AWS, Nginx, MySQL, Redis, Nagios.</p>
+                  </div>
+                </div>
+                <h2>Skills</h2>
+                <hr>
+                <li>Linux</li>
+                <li>Python</li>
+                <li>Django</li>
+                <li>Scrapy</li>
+                <li>MySQL</li>
+              </div>
+            </div>
+          </div>
+          <!-- End Jumbotron -->
         </div>
-      <div class="col-9">
-       <h1 class="display-3">Rocio Aramberri Schegel</h1>
-       <hr class="my-4">
-        <p>Page coming soon... </p>
-      </div>
-    </div>
-  </div>
+
   </body>
 </html>
