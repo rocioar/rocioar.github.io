@@ -3,7 +3,7 @@
 - name: Scrapy
   level: 100
 - name: Django
-  level: 80
+  level: 100
 - name: Linux
   level: 70
 - name: Javascript

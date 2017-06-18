@@ -9,13 +9,13 @@ layout: default
         <section id="skills">
           {% for skill in site.data.skills %}
           <div class="progress">
-            <div class="progress-bar bg-info" role="progressbar" style="width: {{ skill.level }}%;" aria-valuenow="{{ skill.level }}" aria-valuemin="0" aria-valuemax="100">{{ skill.name }}</div>
+            <div class="progress-bar bg-sucess" role="progressbar" style="width: {{ skill.level }}%;" aria-valuenow="{{ skill.level }}" aria-valuemin="0" aria-valuemax="100">{{ skill.name }}</div>
           </div>
           {% endfor %}
         </section>
       </div>
       <div class="col-10">
-        <h2 class="display-3">Rocio Aramberri</h2>
+        <h1 class="display-4">Rocio Aramberri</h1>
         <hr class="my-4">
         <p>Self-taught Software Developer with <strong>5 years</strong> of experience developing in <strong>Python</strong> (libraries: Django, Django Rest Framework, Celery, Flask, Scrapy). Enjoy learning new skills and working on challenging projects.
         </p>
@@ -23,16 +23,16 @@ layout: default
           <h2>Experience</h2>
           <hr>
           {% for experience in site.data.experience %}
-          <div class="row">
-            <div class="col-3">
+          <dl class="row">
+            <dt class="col-sm-3">
               <h5>{{experience.period}}</h5>
-            </div>
-            <div class="col-9">
+            </dt>
+            <dd class="col-sm-9">
               <h4>{{experience.title}}</h4>
-            <a href="{{experience.company_url}}">{{experience.company}}</a>
-            <p>{{experience.description}}</p>
-            </div>
-          </div>
+              <a href="{{experience.company_url}}">{{experience.company}}</a>
+              <p>{{experience.description}}</p>
+            </dd>
+          </dl>
           {% endfor %}
         </section>
       </div>
