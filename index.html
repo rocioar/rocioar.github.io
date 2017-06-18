@@ -9,7 +9,7 @@ layout: default
         <section id="skills">
           {% for skill in site.data.skills %}
           <div class="progress">
-            <div class="progress-bar bg-sucess" role="progressbar" style="width: {{ skill.level }}%;" aria-valuenow="{{ skill.level }}" aria-valuemin="0" aria-valuemax="100">{{ skill.name }}</div>
+            <div class="progress-bar bg-sucess" role="progressbar" style="width: {{ skill.level }}%; height: 18px;" aria-valuenow="{{ skill.level }}" aria-valuemin="0" aria-valuemax="100">{{ skill.name }}</div>
           </div>
           {% endfor %}
         </section>
