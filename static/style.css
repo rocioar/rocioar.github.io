@@ -1,6 +1,5 @@
 body {
     background-color: #30628e;
-    font-family: Georgia, Garamond, "Times New Roman", Times, serif;
 }
 
 div.container {
@@ -20,5 +19,4 @@ div.progress {
 
 img#profile-photo {
     border-radius: 25px;
-    width:150px
 }
