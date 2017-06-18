@@ -1,0 +1,14 @@
+- title: Architecting on AWS
+  by: Amazon
+  year: 2012
+- title: MondoDB for Developers
+  by: 10gen
+  certificate: https://s3-us-west-2.amazonaws.com/certificates-schegel/mongo_certificate.pdf
+  year: 2013
+- title: Functional Programming Principles in Scala
+  by: Martin Odersky - Coursera
+  certificate: https://s3-us-west-2.amazonaws.com/certificates-schegel/scala_certificate.pdf
+  year: 2013
+- title: Mining Massive Datasets
+  by: Stanford University - Cousera
+  year: 2014

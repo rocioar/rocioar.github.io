@@ -2,7 +2,7 @@
   period: Sep 2016 - Present
   company: Scrapinghub
   company_url: http://scrapinghub.com
-  description: "In charge of internal API. Technologies used: Django, Django Rest Framework, Celery, MySQL, Docker."
+  description: "In charge of internal API written in Python"
 - title: Head of Human Resources
   period: Jan 2015 - Sep 2016
   company: Scrapinghub
@@ -19,7 +19,7 @@
   company_url: http://scrapinghub.com
   description: Worked developing Scrapy Spiders through different Professional Services projects.
 - title: Software Developer/Sysadmin
-  period: Sep 2016 - Present
+  period: March 2012 - Jul 2013
   company: Innuy
   company_url: http://innuy.com
-  description: As one of the first employees of Innuy I was in charge of developing servicioos.com, a web application developed using Python/Django. As part of my responsibilities I architectured and administered the infrastructure in order for this application to run. Technologies I used include AWS, Nginx, MySQL, Redis, Nagios.
+  description: Worked developing servicioos.com, a web application made with Python/Django. As one of the first employees I was also responsible of architecting and administering the infrastructure. Technologies used include AWS (EC2, S3), Linux, Nginx, MySQL, Redis, Nagios.
