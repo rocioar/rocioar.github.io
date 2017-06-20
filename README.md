@@ -1,1 +1,1 @@
-My personal webiste, located at: [http://schegel.net](schegel.net).
+My personal webiste, located at: [schegel.net](http://schegel.net).
