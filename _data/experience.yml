@@ -1,13 +1,23 @@
-- title: Software Engineer II
-  period: October 2018 - Present
+- title: Lead Engineer
+  period: August 2019 - Present
   company: BriteCore
   company_url: https://www.britecore.com/
-  description: "Working on the Product team, developing the new generation of BriteCore. Stack: Python/Django and VueJS."
-- title: Open Source Software Developer
+  description:
+    Lead Engineer on the BriteLines product team, providing mentorship to the engineers on the team,
+    reviewing code changes, and communicating with clients. Stack: Python/Django and VueJS.
+- title: Senior Software Engineer
+  period: October 2018 - July 2019
+  company: BriteCore
+  company_url: https://www.britecore.com/
+  description:
+    Working on the BriteLines product team, developing the new generation of BriteCore.
+    Stack: Python/Django and VueJS.
+- title: Open Source Senior Software Developer
   period: March 2018 - Present
   company: OpenCraft
   company_url: http://opencraft.com
-  description: "Working on OpenEdX customizations, and additions. Main stack: Python Django, AWS, OpenStack."
+  description:
+    Working on OpenEdX customizations, and additions. Main stack: Python Django, AWS, OpenStack.
 - title: Software Engineer
   period: Sep 2016 - Feb 2018
   company: Scrapinghub
