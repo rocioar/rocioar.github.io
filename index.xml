@@ -18,9 +18,9 @@
       <pubDate>Sun, 03 May 2020 00:00:00 +0000</pubDate>
       
       <guid>/posts/optimizing-django-orm-queries/</guid>
-      <description>The Django ORM (Object Relational Mapping) is one of the most powerful features of Django, it enables us to interact with the database using Python code.
+      <description>The Django ORM (Object Relational Mapping) is one of the most powerful features of Django. It enables us to interact with the database using Python code instead of SQL.
 It has multiple advantages:
- The database engine is abstracted from us so it is possible to switch to another database system with ease. Supports migrations: we can easily change our tables by updating our models and Django will automatically generate the migration scripts needed to update our database tables.</description>
+ The database engine is abstracted from us, so it is possible to switch to another database system with ease. It supports migrations: we can easily change our tables by updating our models and Django will automatically generate the migration scripts needed to update the database tables.</description>
     </item>
     
     <item>
