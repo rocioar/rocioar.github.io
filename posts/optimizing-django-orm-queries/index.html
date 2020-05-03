@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Optimizing Django ORM Queries :: roschegel — A simple, retro theme for Hugo</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="description" content="The Django ORM (Object Relational Mapping) is one of the most powerful features of Django, it enables us to interact with the database using Python code.
+It has multiple advantages:
+ The database engine is abstracted from us so it is possible to switch to another database system with ease. Supports migrations: we can easily change our tables by updating our models and Django will automatically generate the migration scripts needed to update our database tables." />
+<meta name="keywords" content="" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="/posts/optimizing-django-orm-queries/" />
+
+
+
+
+<link rel="stylesheet" href="/assets/style.css">
+
+  <link rel="stylesheet" href="/assets/blue.css">
+
+
+
+<link rel="stylesheet" href="/style.css">
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="/img/favicon/blue.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+  <meta name="twitter:site" content="" />
+
+<meta name="twitter:creator" content="Rocio Aramberri" />
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Optimizing Django ORM Queries :: roschegel">
+<meta property="og:description" content="The Django ORM (Object Relational Mapping) is one of the most powerful features of Django, it enables us to interact with the database using Python code.
+It has multiple advantages:
+ The database engine is abstracted from us so it is possible to switch to another database system with ease. Supports migrations: we can easily change our tables by updating our models and Django will automatically generate the migration scripts needed to update our database tables." />
+<meta property="og:url" content="/posts/optimizing-django-orm-queries/" />
+<meta property="og:site_name" content="Optimizing Django ORM Queries" />
+
+  
+    <meta property="og:image" content="/img/favicon/blue.png">
+  
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2020-05-03 00:00:00 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="">
+
+
+<div class="container headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    roschegel
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/about">About</a></li>
+        
+      
+        
+          <li><a href="/">Posts</a></li>
+        
+      
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+      
+        <li><a href="/">Posts</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="/posts/optimizing-django-orm-queries/">Optimizing Django ORM Queries</a></h1>
+  <div class="post-meta">
+      
+    <span class="post-date">
+      2020-05-03
+    </span>
+    
+    
+    <span class="post-author">::
+      Rocio Aramberri
+    </span>
+    
+  </div>
+
+  
+
+  
+
+  <div class="post-content"><div>
+        <p>The Django ORM (Object Relational Mapping) is one of the most powerful features of Django, it enables us to interact with the database using Python code.</p>
+<p>It has multiple advantages:</p>
+<ul>
+<li>The database engine is abstracted from us so it is possible to switch to another database system with ease.</li>
+<li>Supports migrations: we can easily change our tables by updating our models and Django will automatically generate the migration scripts needed to update our database tables.</li>
+<li>Supports transactions: you can make multiple updates to a database within a transaction and, if something fails, roll it back to the way it was when you started.</li>
+</ul>
+<p>But it also comes with some disadvantages:</p>
+<ul>
+<li>Since it is an abstraction on top of SQL, it is obscure, and we don’t know exactly what our queries relate to in SQL.</li>
+<li>Django has no way to guess when you will need to use a related table, so it won’t do JOINs for you when you need them.</li>
+<li>The ORM gives us the wrong sensation that what we are doing is not expensive, we have no easy way to know that accessing an attribute in an object might trigger a query to the database that we could have avoided from the beginning by using a JOIN.</li>
+</ul>
+<p>To overcome the disadvantages we need to become more acquainted with it and understand what is happening under the hood.</p>
+<p>In this blog post, I will go through all that you need to know in order to write more optimized Django ORM queries.</p>
+<h2 id="find-out-whats-happening-under-the-hood">Find out what’s happening under the hood<a href="#find-out-whats-happening-under-the-hood" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>First, we need to understand what is happening in our system, which SQL queries are being run, and what’s costing us the most.</p>
+<p>Here are some different mechanisms to inspect SQL queries as they are executed:</p>
+<h3 id="1-connectionqueries">1. connection.queries<a href="#1-connectionqueries" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>When debug=True, it is possible to access the queries that have been run by doing:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">&gt;&gt;&gt;</span> <span style="color:#f92672">from</span> django.db <span style="color:#f92672">import</span> connection
+<span style="color:#f92672">&gt;&gt;&gt;</span> Post<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>all()
+<span style="color:#f92672">&gt;&gt;&gt;</span> connection<span style="color:#f92672">.</span>queries
+[{<span style="color:#e6db74">&#39;sql&#39;</span>: <span style="color:#e6db74">&#39;SELECT &#34;blogposts_post&#34;.&#34;id&#34;, &#34;blogposts_post&#34;.&#34;title&#34;, &#34;blogposts_post&#34;.&#34;content&#34;, &#34;blogposts_post&#34;.&#34;blog_id&#34;, &#34;blogposts_post&#34;.&#34;published&#34; FROM &#34;blogposts_post&#34; LIMIT 21&#39;</span>,
+  <span style="color:#e6db74">&#39;time&#39;</span>: <span style="color:#e6db74">&#39;0.001&#39;</span>}]
+</code></pre></div><p>This will print a list of SQL queries in the form of dictionaries containing the SQL code and the time it took to run.</p>
+<p>The queries list could get convoluted very easily, to fix that Django provides a way to clean them up:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">&gt;&gt;&gt;</span> <span style="color:#f92672">from</span> django.db <span style="color:#f92672">import</span> reset_queries
+<span style="color:#f92672">&gt;&gt;&gt;</span> reset_queries()
+</code></pre></div><h3 id="2-django-extensions-shell_plus-command-with---print-sql-parameter">2. django-extension’s shell_plus command with &ndash;print-sql parameter<a href="#2-django-extensions-shell_plus-command-with---print-sql-parameter" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>Django Extension project is great and comes with a handful of useful features.</p>
+<p><code>shell_plus</code> is one of them. It’s a shell, with some extra additions. If you call it with <code>--print-sql</code> parameter, it will print the SQL queries as they are executed when you run your code.</p>
+<p>We will be using shell_plus throughout this post so that you can see the SQL queries that are being executed as we run our code.</p>
+<p>Here is a quick example of how the output would look like:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#960050;background-color:#1e0010">$</span> <span style="color:#f92672">./</span>manage<span style="color:#f92672">.</span>py shell_plus <span style="color:#f92672">--</span><span style="color:#66d9ef">print</span><span style="color:#f92672">-</span>sql
+<span style="color:#f92672">&gt;&gt;&gt;</span> post <span style="color:#f92672">=</span> Post<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>get(id<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>)
+SELECT <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+     	<span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;title&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;content&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;blog_id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;published&#34;</span>
+ FROM <span style="color:#e6db74">&#34;blogposts_post&#34;</span>
+ORDER BY <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span> ASC
+LIMIT <span style="color:#ae81ff">1</span>
+</code></pre></div><h3 id="3-django-silk">3. Django-silk<a href="#3-django-silk" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>Django-silk is a profiling tool. It intercepts requests, records the SQL queries that were performed, and provides a way to visualize them.</p>
+<p>You will be able to browse through the requests, see a list of SQL queries that were performed, and look at the details about a specific query including which line of code caused a certain query to run.</p>
+<h3 id="4-django-debug-toolbar">4. Django-debug-toolbar<a href="#4-django-debug-toolbar" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>Django-debug-toolbar adds a toolbar on the right of your screen with lots of debugging information. Using it you can easily see the number of SQL queries that were performed on a request. It is also possible to inspect these queries further, check the SQL and see in which order they were performed and how much time each one took.</p>
+<h2 id="optimize-your-queries">Optimize your queries<a href="#optimize-your-queries" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h3 id="introducing-an-example-database-model">Introducing an Example Database Model<a href="#introducing-an-example-database-model" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Blog</span>(models<span style="color:#f92672">.</span>Model):
+   name <span style="color:#f92672">=</span> models<span style="color:#f92672">.</span>CharField(max_length<span style="color:#f92672">=</span><span style="color:#ae81ff">250</span>)
+   url <span style="color:#f92672">=</span> models<span style="color:#f92672">.</span>URLField()
+ 
+   <span style="color:#66d9ef">def</span> __str__(self):
+       <span style="color:#66d9ef">return</span> self<span style="color:#f92672">.</span>name
+ 
+ 
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Author</span>(models<span style="color:#f92672">.</span>Model):
+   name <span style="color:#f92672">=</span> models<span style="color:#f92672">.</span>CharField(max_length<span style="color:#f92672">=</span><span style="color:#ae81ff">250</span>)
+   email <span style="color:#f92672">=</span> models<span style="color:#f92672">.</span>EmailField()
+ 
+   <span style="color:#66d9ef">def</span> __str__(self):
+       <span style="color:#66d9ef">return</span> self<span style="color:#f92672">.</span>name
+ 
+ 
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Post</span>(models<span style="color:#f92672">.</span>Model):
+   title <span style="color:#f92672">=</span> models<span style="color:#f92672">.</span>CharField(max_length<span style="color:#f92672">=</span><span style="color:#ae81ff">250</span>)
+   content <span style="color:#f92672">=</span> models<span style="color:#f92672">.</span>TextField()
+   blog <span style="color:#f92672">=</span> models<span style="color:#f92672">.</span>ForeignKey(Blog, on_delete<span style="color:#f92672">=</span>models<span style="color:#f92672">.</span>CASCADE)
+   authors <span style="color:#f92672">=</span> models<span style="color:#f92672">.</span>ManyToManyField(Author, related_name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;posts&#34;</span>)
+   published <span style="color:#f92672">=</span> models<span style="color:#f92672">.</span>BooleanField(default<span style="color:#f92672">=</span>False)
+ 
+   <span style="color:#66d9ef">def</span> __str__(self):
+       <span style="color:#66d9ef">return</span> self<span style="color:#f92672">.</span>title
+</code></pre></div><h3 id="use-cached-foreign-key-ids">Use cached Foreign Key ids<a href="#use-cached-foreign-key-ids" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>If you just need to access the <code>id</code> of a ForeignKey relationship, you can use the cached id that Django already has cached for you through <code>&lt;field_name&gt;_id</code>.</p>
+<p>Let see this through an example:</p>
+<p>Don’t:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_blog_id</span>(post_id):
+    post <span style="color:#f92672">=</span> Post<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>get(id<span style="color:#f92672">=</span>post_id)
+    <span style="color:#66d9ef">return</span> post<span style="color:#f92672">.</span>blog<span style="color:#f92672">.</span>id
+</code></pre></div><p>Accessing the id through the nested object <code>blog</code> will generate a new SQL query, since Django thinks that you will need access to all the information regarding the blog object, not just the id.</p>
+<p>Do:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_blog_id</span>(post_id):
+    post <span style="color:#f92672">=</span> Post<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>get(id<span style="color:#f92672">=</span>post_id)
+    <span style="color:#66d9ef">return</span> post<span style="color:#f92672">.</span>blog_id
+</code></pre></div><h3 id="let-django-know-what-you-will-need-in-advance">Let Django know what you will need in advance<a href="#let-django-know-what-you-will-need-in-advance" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<h4 id="use-select_related-for-foreign-keys">Use select_related for Foreign Keys<a href="#use-select_related-for-foreign-keys" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<p>Django has no way of anticipating when we will need to access a ForeignKey relationship from within the model we are querying. select_related utility allows us to tell Django exactly which related models we want so that it can perform JOINs.</p>
+<p>In our example, we had a Post and a Post belonged to a specific Blog. This relationship is represented on the database through a ForeignKey from the Post to the Blog.</p>
+<p>To access a specific Post object we could do:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">&gt;&gt;&gt;</span> post <span style="color:#f92672">=</span> Post<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>get(id<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>)
+SELECT <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;title&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;content&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;blog_id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;published&#34;</span>
+ FROM <span style="color:#e6db74">&#34;blogposts_post&#34;</span>
+ORDER BY <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span> ASC
+LIMIT <span style="color:#ae81ff">1</span>
+</code></pre></div><p>If we wanted to access the blog object from within the post, we could do:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">&gt;&gt;&gt;</span> post<span style="color:#f92672">.</span>blog
+SELECT <span style="color:#e6db74">&#34;blogposts_blog&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_blog&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;name&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_blog&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;url&#34;</span>
+ FROM <span style="color:#e6db74">&#34;blogposts_blog&#34;</span>
+WHERE <span style="color:#e6db74">&#34;blogposts_blog&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+LIMIT <span style="color:#ae81ff">21</span>
+
+Execution time: <span style="color:#ae81ff">0.000602</span>s [Database: default]
+<span style="color:#f92672">&lt;</span>Blog: Rocio<span style="color:#e6db74">&#39;s Blog&gt;</span>
+</code></pre></div><p>However, this statement generated a new query to grab the information from the blog but we want to avoid that. This is when select_related comes to our rescue. To use it, we just do:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">&gt;&gt;&gt;</span> post <span style="color:#f92672">=</span> Post<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>select_related(<span style="color:#e6db74">&#34;blog&#34;</span>)<span style="color:#f92672">.</span>get(id<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>)
+SELECT <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;title&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;content&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;blog_id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;published&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_blog&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_blog&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;name&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_blog&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;url&#34;</span>
+ FROM <span style="color:#e6db74">&#34;blogposts_post&#34;</span>
+INNER JOIN <span style="color:#e6db74">&#34;blogposts_blog&#34;</span>
+   ON (<span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;blog_id&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;blogposts_blog&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>)
+WHERE <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+LIMIT <span style="color:#ae81ff">21</span>
+
+Execution time: <span style="color:#ae81ff">0.000150</span>s [Database: default]
+</code></pre></div><p>Notice how now Django used a JOIN on the SQL query above to also grab the attributes from the blog table for us. Now, when accessing the blog object from within the post, it will not require an extra query, since it will already be cached:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">&gt;&gt;&gt;</span> post<span style="color:#f92672">.</span>blog
+<span style="color:#f92672">&lt;</span>Blog: Rocio<span style="color:#e6db74">&#39;s Blog&gt;</span>
+</code></pre></div><p>select_related also works for querysets, we could pre-select the blog object for an entire queryset. If there were 50 Posts and we didn’t use select_related to pre-select the blog object, it would take Django 50 queries to run the following code, with select_related it just takes one:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">&gt;&gt;&gt;</span> posts <span style="color:#f92672">=</span> Post<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>select_related(<span style="color:#e6db74">&#34;blog&#34;</span>)<span style="color:#f92672">.</span>all()
+<span style="color:#f92672">&gt;&gt;&gt;</span> <span style="color:#66d9ef">for</span> post <span style="color:#f92672">in</span> posts:
+       post<span style="color:#f92672">.</span>blog
+
+SELECT <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;title&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;content&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;blog_id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;published&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_blog&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_blog&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;name&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_blog&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;url&#34;</span>
+ FROM <span style="color:#e6db74">&#34;blogposts_post&#34;</span>
+INNER JOIN <span style="color:#e6db74">&#34;blogposts_blog&#34;</span>
+   ON (<span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;blog_id&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;blogposts_blog&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>)
+
+Execution time: <span style="color:#ae81ff">0.000224</span>s [Database: default]
+</code></pre></div><h4 id="use-prefetch_related-for-manytomany-fields">Use prefetch_related for ManyToMany fields<a href="#use-prefetch_related-for-manytomany-fields" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<p>prefetch_related is similar to select_related, but it is used for pre-selecting ManyToMany fields. Prefetch_related works differently, let’s see it through an example.</p>
+<p>Let’s say we wanted to grab all the Posts and then print the Authors for each of the Posts. We could do the following:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">&gt;&gt;&gt;</span> <span style="color:#66d9ef">for</span> post <span style="color:#f92672">in</span> Post<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>all():
+       post<span style="color:#f92672">.</span>authors<span style="color:#f92672">.</span>all()
+ 
+SELECT <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;title&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;content&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;blog_id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;published&#34;</span>
+ FROM <span style="color:#e6db74">&#34;blogposts_post&#34;</span>
+ 
+Execution time: <span style="color:#ae81ff">0.000158</span>s [Database: default]
+<span style="color:#f92672">&lt;</span>QuerySet []<span style="color:#f92672">&gt;</span>
+SELECT <span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;name&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;email&#34;</span>
+ FROM <span style="color:#e6db74">&#34;blogposts_author&#34;</span>
+INNER JOIN <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span>
+   ON (<span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;author_id&#34;</span>)
+WHERE <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;post_id&#34;</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+LIMIT <span style="color:#ae81ff">21</span>
+ 
+Execution time: <span style="color:#ae81ff">0.000101</span>s [Database: default]
+<span style="color:#f92672">&lt;</span>QuerySet []<span style="color:#f92672">&gt;</span>
+SELECT <span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;name&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;email&#34;</span>
+ FROM <span style="color:#e6db74">&#34;blogposts_author&#34;</span>
+INNER JOIN <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span>
+   ON (<span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;author_id&#34;</span>)
+WHERE <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;post_id&#34;</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>
+LIMIT <span style="color:#ae81ff">21</span>
+Execution time: <span style="color:#ae81ff">0.001043</span>s [Database: default]
+ 
+Execution time: <span style="color:#ae81ff">0.000101</span>s [Database: default]
+<span style="color:#f92672">&lt;</span>QuerySet []<span style="color:#f92672">&gt;</span>
+SELECT <span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;name&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;email&#34;</span>
+ FROM <span style="color:#e6db74">&#34;blogposts_author&#34;</span>
+INNER JOIN <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span>
+   ON (<span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;author_id&#34;</span>)
+WHERE <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;post_id&#34;</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>
+LIMIT <span style="color:#ae81ff">21</span>
+Execution time: <span style="color:#ae81ff">0.001043</span>s [Database: default]
+</code></pre></div><p>Notice that the code above generated 4 queries, one to grab the posts, and then 1 query to grab the authors for each of the posts (there were 3 posts in total).</p>
+<p>This is the famous N + 1 problem. Given N posts, N + 1 queries will be performed. In this scenario, we had 3 posts, which translated to 4 queries, it isn’t that much, but this could very easily escalate as we create new Posts. With 50 Posts, this code would generate 51 queries.</p>
+<p>To avoid that, we could pre-select the Authors using using prefetch_related:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">&gt;&gt;&gt;</span> <span style="color:#66d9ef">for</span> post <span style="color:#f92672">in</span> Post<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>prefetch_related(<span style="color:#e6db74">&#34;authors&#34;</span>)<span style="color:#f92672">.</span>all():
+       post<span style="color:#f92672">.</span>authors<span style="color:#f92672">.</span>all()
+ 
+SELECT <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;title&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;content&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;blog_id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;published&#34;</span>
+ FROM <span style="color:#e6db74">&#34;blogposts_post&#34;</span>
+ 
+Execution time: <span style="color:#ae81ff">0.000158</span>s [Database: default]
+SELECT (<span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;post_id&#34;</span>) AS <span style="color:#e6db74">&#34;_prefetch_related_val_post_id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;name&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;email&#34;</span>
+ FROM <span style="color:#e6db74">&#34;blogposts_author&#34;</span>
+INNER JOIN <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span>
+   ON (<span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;author_id&#34;</span>)
+WHERE <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;post_id&#34;</span> IN (<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">3</span>)
+ 
+Execution time: <span style="color:#ae81ff">0.001043</span>s [Database: default]
+</code></pre></div><p>With our updated code, only 2 queries were performed. When prefetch_related is used, Django first grabs all the posts and then runs another SQL query that retrieves all the authors for all the posts.</p>
+<h4 id="customizing-prefetch">Customizing Prefetch<a href="#customizing-prefetch" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<p>In some scenarios prefetch_related simplest syntax is not enough to avoid Django from doing extra queries, to further control the prefetch you can use the Prefetch object.</p>
+<p>On our example database, we have a Post model and an Author model, the Post model is related to the Author model through a ManyToMany field. Let’s say we wanted to go author by author and grab all the posts that were published by that author:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">&gt;&gt;&gt;</span> authors <span style="color:#f92672">=</span> Author<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>all()
+<span style="color:#f92672">&gt;&gt;&gt;</span> <span style="color:#66d9ef">for</span> author <span style="color:#f92672">in</span> authors:
+       <span style="color:#66d9ef">print</span>(author<span style="color:#f92672">.</span>posts<span style="color:#f92672">.</span>filter(published<span style="color:#f92672">=</span>True))
+ 
+SELECT <span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;name&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;email&#34;</span>
+ FROM <span style="color:#e6db74">&#34;blogposts_author&#34;</span>
+ 
+Execution time: <span style="color:#ae81ff">0.000251</span>s [Database: default]
+SELECT <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;title&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;content&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;blog_id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;published&#34;</span>
+ FROM <span style="color:#e6db74">&#34;blogposts_post&#34;</span>
+INNER JOIN <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span>
+   ON (<span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;post_id&#34;</span>)
+WHERE (<span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;author_id&#34;</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> AND <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;published&#34;</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>)
+LIMIT <span style="color:#ae81ff">21</span>
+ 
+Execution time: <span style="color:#ae81ff">0.000178</span>s [Database: default]
+<span style="color:#f92672">&lt;</span>QuerySet [<span style="color:#f92672">&lt;</span>Post: Optimizing Django ORM Queries<span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post<span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post <span style="color:#ae81ff">2</span><span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post <span style="color:#ae81ff">3</span><span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post <span style="color:#ae81ff">4</span><span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post <span style="color:#ae81ff">6</span><span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post <span style="color:#ae81ff">7</span><span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post <span style="color:#ae81ff">8</span><span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post <span style="color:#ae81ff">9</span><span style="color:#f92672">&gt;</span>]<span style="color:#f92672">&gt;</span>
+SELECT <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;title&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;content&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;blog_id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;published&#34;</span>
+ FROM <span style="color:#e6db74">&#34;blogposts_post&#34;</span>
+INNER JOIN <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span>
+   ON (<span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;post_id&#34;</span>)
+WHERE (<span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;author_id&#34;</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span> AND <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;published&#34;</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>)
+LIMIT <span style="color:#ae81ff">21</span>
+ 
+Execution time: <span style="color:#ae81ff">0.000081</span>s [Database: default]
+<span style="color:#f92672">&lt;</span>QuerySet [<span style="color:#f92672">&lt;</span>Post: Optimizing Django ORM Queries<span style="color:#f92672">&gt;</span>]<span style="color:#f92672">&gt;</span>
+</code></pre></div><p>As you can see, the above code generated 3 queries, 1 to grab the author, and then 2 queries to grab the posts for each of the authors.</p>
+<p>What if we used prefetch_related? It seems to be the right thing to do:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">&gt;&gt;&gt;</span> authors <span style="color:#f92672">=</span> Author<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>prefetch_related(<span style="color:#e6db74">&#34;posts&#34;</span>)<span style="color:#f92672">.</span>all()
+<span style="color:#f92672">&gt;&gt;&gt;</span> <span style="color:#66d9ef">for</span> author <span style="color:#f92672">in</span> authors:
+       <span style="color:#66d9ef">print</span>(author<span style="color:#f92672">.</span>posts<span style="color:#f92672">.</span>filter(published<span style="color:#f92672">=</span>True))
+ 
+SELECT <span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;name&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;email&#34;</span>
+ FROM <span style="color:#e6db74">&#34;blogposts_author&#34;</span>
+ 
+Execution time: <span style="color:#ae81ff">0.000097</span>s [Database: default]
+SELECT (<span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;author_id&#34;</span>) AS <span style="color:#e6db74">&#34;_prefetch_related_val_author_id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;title&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;content&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;blog_id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;published&#34;</span>
+ FROM <span style="color:#e6db74">&#34;blogposts_post&#34;</span>
+INNER JOIN <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span>
+   ON (<span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;post_id&#34;</span>)
+WHERE <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;author_id&#34;</span> IN (<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>)
+ 
+Execution time: <span style="color:#ae81ff">0.000190</span>s [Database: default]
+SELECT <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;title&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;content&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;blog_id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;published&#34;</span>
+ FROM <span style="color:#e6db74">&#34;blogposts_post&#34;</span>
+INNER JOIN <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span>
+   ON (<span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;post_id&#34;</span>)
+WHERE (<span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;author_id&#34;</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> AND <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;published&#34;</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>)
+LIMIT <span style="color:#ae81ff">21</span>
+ 
+Execution time: <span style="color:#ae81ff">0.000074</span>s [Database: default]
+<span style="color:#f92672">&lt;</span>QuerySet [<span style="color:#f92672">&lt;</span>Post: Optimizing Django ORM Queries<span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post<span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post <span style="color:#ae81ff">2</span><span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post <span style="color:#ae81ff">3</span><span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post <span style="color:#ae81ff">4</span><span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post <span style="color:#ae81ff">6</span><span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post <span style="color:#ae81ff">7</span><span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post <span style="color:#ae81ff">8</span><span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post <span style="color:#ae81ff">9</span><span style="color:#f92672">&gt;</span>]<span style="color:#f92672">&gt;</span>
+SELECT <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;title&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;content&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;blog_id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;published&#34;</span>
+ FROM <span style="color:#e6db74">&#34;blogposts_post&#34;</span>
+INNER JOIN <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span>
+   ON (<span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;post_id&#34;</span>)
+WHERE (<span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;author_id&#34;</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span> AND <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;published&#34;</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>)
+LIMIT <span style="color:#ae81ff">21</span>
+ 
+Execution time: <span style="color:#ae81ff">0.000070</span>s [Database: default]
+<span style="color:#f92672">&lt;</span>QuerySet [<span style="color:#f92672">&lt;</span>Post: Optimizing Django ORM Queries<span style="color:#f92672">&gt;</span>]<span style="color:#f92672">&gt;</span>
+</code></pre></div><p>What did just happen? We used prefetch_related to reduce the number of queries, and we actually increased it by 1.</p>
+<p>This is happening because we are filtering the posts with published=True, Django can’t use our cached posts since they were not filtered. To avoid this from happening we can customize the queryset using the Prefetch object:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">&gt;&gt;&gt;</span> authors <span style="color:#f92672">=</span> Author<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>prefetch_related(Prefetch(<span style="color:#e6db74">&#34;posts&#34;</span>, queryset<span style="color:#f92672">=</span>Post<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>filter(published<span style="color:#f92672">=</span>True), to_attr<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;published_posts&#34;</span>
+))
+<span style="color:#f92672">&gt;&gt;&gt;</span> <span style="color:#66d9ef">for</span> author <span style="color:#f92672">in</span> authors:
+      <span style="color:#66d9ef">print</span>(author<span style="color:#f92672">.</span>published_posts)
+ 
+ 
+SELECT <span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;name&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_author&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;email&#34;</span>
+ FROM <span style="color:#e6db74">&#34;blogposts_author&#34;</span>
+ 
+Execution time: <span style="color:#ae81ff">0.000129</span>s [Database: default]
+SELECT (<span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;author_id&#34;</span>) AS <span style="color:#e6db74">&#34;_prefetch_related_val_author_id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;title&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;content&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;blog_id&#34;</span>,
+      <span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;published&#34;</span>
+ FROM <span style="color:#e6db74">&#34;blogposts_post&#34;</span>
+INNER JOIN <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span>
+   ON (<span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;id&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;post_id&#34;</span>)
+WHERE (<span style="color:#e6db74">&#34;blogposts_post&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;published&#34;</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> AND <span style="color:#e6db74">&#34;blogposts_post_authors&#34;</span><span style="color:#f92672">.</span><span style="color:#e6db74">&#34;author_id&#34;</span> IN (<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>))
+ 
+Execution time: <span style="color:#ae81ff">0.000089</span>s [Database: default]
+[<span style="color:#f92672">&lt;</span>Post: Optimizing Django ORM Queries<span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post<span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post <span style="color:#ae81ff">2</span><span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post <span style="color:#ae81ff">3</span><span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post <span style="color:#ae81ff">4</span><span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post <span style="color:#ae81ff">6</span><span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post <span style="color:#ae81ff">7</span><span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post <span style="color:#ae81ff">8</span><span style="color:#f92672">&gt;</span>, <span style="color:#f92672">&lt;</span>Post: Placeholder Post <span style="color:#ae81ff">9</span><span style="color:#f92672">&gt;</span>]
+[<span style="color:#f92672">&lt;</span>Post: Optimizing Django ORM Queries<span style="color:#f92672">&gt;</span>]
+</code></pre></div><p>We used the Prefetch object to tell Django to:</p>
+<ul>
+<li>Use a specific queryset to retrieve the posts  - through the queryset parameter
+Store the filtered posts in a new attribute - through the to_attr parameter</li>
+<li>When author.published_posts is run no extra queries are needed since everything was already cached. No matter the number of authors on our system, this operation will always take 2 SQL queries.</li>
+</ul>
+<h2 id="wrapping-up">Wrapping up<a href="#wrapping-up" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>On this blogpost you learned that:</p>
+<ul>
+<li>To access Foreign Key field ids we can use the cached value to avoid queries.</li>
+<li>You can use select_related to avoid extra queries for ForeignKey fields.</li>
+<li>You can use prefetch_related to avoid extra queries for Many to Many fields.</li>
+<li>When the simplest prefetch_related syntax is not enough, you can customize it using the Prefetch object.</li>
+</ul>
+<h2 id="references">References<a href="#references" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p><a href="https://docs.djangoproject.com/en/3.0/t">https://docs.djangoproject.com/en/3.0/t</a></p>
+
+      </div></div>
+
+  
+  
+  
+
+  
+
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright copyright--user">
+        <span>By Rocio Aramberri</span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="/assets/main.js"></script>
+<script src="/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

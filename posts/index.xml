@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on roschegel</title>
+    <link>/posts/</link>
+    <description>Recent content in Posts on roschegel</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>By Rocio Aramberri</copyright>
+    <lastBuildDate>Sun, 03 May 2020 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/posts/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Optimizing Django ORM Queries</title>
+      <link>/posts/optimizing-django-orm-queries/</link>
+      <pubDate>Sun, 03 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/optimizing-django-orm-queries/</guid>
+      <description>The Django ORM (Object Relational Mapping) is one of the most powerful features of Django, it enables us to interact with the database using Python code.
+It has multiple advantages:
+ The database engine is abstracted from us so it is possible to switch to another database system with ease. Supports migrations: we can easily change our tables by updating our models and Django will automatically generate the migration scripts needed to update our database tables.</description>
+    </item>
+    
+  </channel>
+</rss>
