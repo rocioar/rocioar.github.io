@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Making your Django tests faster :: roschegel — Rocio&#39;s blog about programming.</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="description" content="Tests need to be fast. If tests are slow, our development process is affected and we end up spending a considerable amount of time waiting for the results.
+I will go through some of the techniques that I’ve applied to speed up tests on Django applications.
+Tips for speeding up test execution 1. Run your tests in parallel If you are running your tests on multi-core hardware, running your tests in parallel is probably the best optimization you can make if you aren’t doing it yet." />
+<meta name="keywords" content="Fast Django tests, faster tests, faster django tests, django tests" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="/posts/making-your-django-tests-faster/" />
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-165430966-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+
+<link rel="stylesheet" href="/assets/style.css">
+
+  <link rel="stylesheet" href="/assets/blue.css">
+
+
+
+<link rel="stylesheet" href="/style.css">
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="/img/photo.jpg">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+  <meta name="twitter:site" content="roschegel" />
+
+<meta name="twitter:creator" content="rocioar" />
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Making your Django tests faster :: roschegel">
+<meta property="og:description" content="Tests need to be fast. If tests are slow, our development process is affected and we end up spending a considerable amount of time waiting for the results.
+I will go through some of the techniques that I’ve applied to speed up tests on Django applications.
+Tips for speeding up test execution 1. Run your tests in parallel If you are running your tests on multi-core hardware, running your tests in parallel is probably the best optimization you can make if you aren’t doing it yet." />
+<meta property="og:url" content="/posts/making-your-django-tests-faster/" />
+<meta property="og:site_name" content="Making your Django tests faster" />
+
+  
+    <meta property="og:image" content="/img/photo.jpg">
+  
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2020-05-09 00:00:00 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+<meta name="twitter:image" content="/img/photo.jpg">
+
+
+</head>
+<body class="">
+
+
+<div class="container headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    roschegel
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/about">About</a></li>
+        
+      
+        
+          <li><a href="/">Posts</a></li>
+        
+      
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+      
+        <li><a href="/">Posts</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="/posts/making-your-django-tests-faster/">Making your Django tests faster</a></h1>
+  <div class="post-meta">
+      
+    <span class="post-date">
+      2020-05-09
+    </span>
+    
+    
+    <span class="post-author">::
+      Rocio Aramberri
+    </span>
+    
+  </div>
+
+  
+  <span class="post-tags">
+    
+    #<a href="/tags/python/">python</a>&nbsp;
+    
+    #<a href="/tags/django/">django</a>&nbsp;
+    
+    #<a href="/tags/pytest/">pytest</a>&nbsp;
+    
+    #<a href="/tags/testing/">testing</a>&nbsp;
+    
+  </span>
+  
+
+  
+
+  <div class="post-content"><div>
+        <p>Tests need to be fast. If tests are slow, our development process is affected and we end up spending a considerable amount of time waiting for the results.</p>
+<p>I will go through some of the techniques that I’ve applied to speed up tests on Django applications.</p>
+<h2 id="tips-for-speeding-up-test-execution">Tips for speeding up test execution<a href="#tips-for-speeding-up-test-execution" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h4 id="1-run-your-tests-in-parallel">1. Run your tests in parallel<a href="#1-run-your-tests-in-parallel" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<p>If you are running your tests on multi-core hardware, running your tests in parallel is probably the best optimization you can make if you aren’t doing it yet.</p>
+<p>If you are using pytest, install <a href="https://docs.pytest.org/en/3.0.1/xdist.html">pytest-xdist</a> plugin:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ pip install pytest-xdist
+</code></pre></div><p>And then run your tests with the <code>-n</code> parameter:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ pytest -n auto
+</code></pre></div><p>The <code>-n</code> parameter accepts either a number, indicating the number of cores in which you would like to run the tests, or the value <code>auto</code> in which case the plugin will automatically detect the number of cores that are available on your machine and use them all.</p>
+<p>If you are using the Django test runner, simply run the tests using the <code>--parallel</code> parameter:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ ./manage.py test --parallel
+</code></pre></div><p>You can also indicate the specific number of cores in which you would like your tests to run by providing a number:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ ./manage.py test --parallel <span style="color:#ae81ff">4</span>
+</code></pre></div><h4 id="2-use-fixtures-for-modularized-setup-pytest-only">2. Use fixtures for modularized setup (Pytest only)<a href="#2-use-fixtures-for-modularized-setup-pytest-only" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<p>In the typical xUnit based testing frameworks (such as <a href="https://docs.python.org/3/library/unittest.html">unittest</a>) you create a setup method within your test class in which you set up everything you need for your tests.</p>
+<p>Pytest fixtures are a replacement for the conventional setup method. To declare a fixture, you create a function and decorate it with the <code>@pytest.fixture</code> decorator.</p>
+<p>To use a fixture on a test case you can:</p>
+<ul>
+<li>Make it run automatically for each test case with the <code>autouse</code> parameter: <code>@pytest.fixture(autouse=True)</code></li>
+<li>Add it to your test case parameter list. This will trigger the fixture to be executed.</li>
+<li>Add the <code>usefixtures</code> mark decorator to your test class: <code>@pytest.mark.usefixtures(&quot;your_fixture&quot;)</code></li>
+</ul>
+<p>One of the greatest advantages of using fixtures is that you can modularize your setup into smaller and less generic functions.</p>
+<p>By splitting your setup method into multiple methods, you will be able to select only the ones you need for each test case. This will ensure that you execute exactly what is needed for each test case and nothing else.</p>
+<h4 id="3-use-the-database-only-when-it-is-needed">3. Use the database only when it is needed<a href="#3-use-the-database-only-when-it-is-needed" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<p>It is common to see lots of database records being created on the setup method of a test class. Usually, not all the records are used by all the test cases, but they still get created each time.</p>
+<p>Make sure you <strong>only</strong> create the records that will be used by all the tests on your setup method. If there is a database record that is not being used by all the test cases, either:</p>
+<ul>
+<li>Move it to a fixture (if you are using pytest)</li>
+<li>Move it to the specific test where you need it</li>
+</ul>
+<h4 id="4-search-for-the-slowest-tests-and-look-for-possible-optimizations-pytest-only">4. Search for the slowest tests and look for possible optimizations (Pytest only)<a href="#4-search-for-the-slowest-tests-and-look-for-possible-optimizations-pytest-only" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<p>Pytest provides a  way to find which are your slowest tests by executing them using the <code>--durations</code> parameter.</p>
+<p>The following command will execute all the tests and print a summary at the end with a list of 5 tests that took the longest to run:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ pytest --durations<span style="color:#f92672">=</span><span style="color:#ae81ff">5</span>
+</code></pre></div><h4 id="5-squash-your-migrations">5. Squash your migrations<a href="#5-squash-your-migrations" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<p>Consider squashing your migrations if you have too many. Squashing refers to reducing the number of migrations you have by merging them into one.</p>
+<p>Migrations are run each time you execute your test suite. [Squashing migrations](<a href="https://docs.djangoproject.com/en/3.0/topics/migrations/#migration-squashing">Migrations | Django documentation | Django</a>) would not only speed up your tests but also your development setup.</p>
+<h2 id="tips-for-speeding-up-your-tests-execution-locally">Tips for speeding up your tests execution locally<a href="#tips-for-speeding-up-your-tests-execution-locally" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>When running tests <strong>locally</strong> while developing a new feature, fixing a bug or refactoring, there are few more things you can do to speed up your tests:</p>
+<h4 id="1-re-use-the-database-among-test-runs">1. Re-use the database among test runs<a href="#1-re-use-the-database-among-test-runs" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<p>Every time you run your Django tests, a new test database is created, this takes a considerable amount of time. When you are not making changes to your models or migration files, you can skip this step by telling the runner that you want to preserve the database among test executions.</p>
+<p>If you are using Pytest, you can use <a href="https://pytest-django.readthedocs.io/en/latest/">pytest-django’s</a>  <code>--reuse-db</code>  parameter:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ pytest --reuse-db
+</code></pre></div><p>If you are using the Django test runner you can accomplish the same with the <code>--keep-db</code> parameter:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ ./manage.py test --keep-db
+</code></pre></div><h4 id="2-disable-migrations-with-no-migrations">2. Disable Migrations with —no-migrations<a href="#2-disable-migrations-with-no-migrations" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<p>When the test runner starts, the database is created and migrations run one by one to reach the current state of your models. If you choose to run your tests without executing the migrations, Django will create the database using the current state of your models.</p>
+<p>Skipping migrations should be safe unless you are making changes to your migrations, in which case you would also want to ensure they are working as expected.</p>
+<p>Depending on the number of migrations you have, they could take a lot of time. But most of the time, while testing locally, we don’t need them to run.</p>
+<p>To disable migrations, include the <code>--no-migrations</code> parameter:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ pytest --no-migrations
+</code></pre></div><p>Or with the Django test runner:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ ./manage.py test --no-migrations
+</code></pre></div><h4 id="3-run-only-the-tests-that-failed-on-the-last-run-pytest-only">3. Run only the tests that failed on the last run (Pytest only)<a href="#3-run-only-the-tests-that-failed-on-the-last-run-pytest-only" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<p>If you just need to know if the tests that were previously failing are still failing, use pytest’s <code>--lf</code> parameter:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ pytest --lf
+</code></pre></div><h2 id="wrapping-up">Wrapping up<a href="#wrapping-up" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Ensuring tests run fast is key to having a healthy project. Applying this techniques should help you take your first steps into faster and more efficient tests with Django.</p>
+<p>If your application is big enough you might want to consider applying the <a href="https://www.cosmicpython.com/book/chapter_02_repository.html">Repository Pattern</a> and making your tests completely independent of the database.</p>
+
+      </div></div>
+
+  
+  
+<div class="pagination">
+    <div class="pagination__title">
+        <span class="pagination__title-h">Read other posts</span>
+        <hr />
+    </div>
+    <div class="pagination__buttons">
+        
+        
+        <span class="button next">
+            <a href="/posts/optimizing-django-orm-queries/">
+                <span class="button__text">Optimizing Django ORM Queries</span>
+                <span class="button__icon">→</span>
+            </a>
+        </span>
+        
+    </div>
+</div>
+
+  
+
+  
+
+  <div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "roschegel" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright copyright--user">
+        <span>By Rocio Aramberri</span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="/assets/main.js"></script>
+<script src="/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

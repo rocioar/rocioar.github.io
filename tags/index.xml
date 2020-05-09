@@ -7,7 +7,7 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>By Rocio Aramberri</copyright>
-    <lastBuildDate>Sun, 03 May 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 09 May 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
     
@@ -15,18 +15,36 @@
     <item>
       <title>django</title>
       <link>/tags/django/</link>
-      <pubDate>Sun, 03 May 2020 00:00:00 +0000</pubDate>
+      <pubDate>Sat, 09 May 2020 00:00:00 +0000</pubDate>
       
       <guid>/tags/django/</guid>
       <description></description>
     </item>
     
     <item>
+      <title>pytest</title>
+      <link>/tags/pytest/</link>
+      <pubDate>Sat, 09 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/pytest/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>python</title>
       <link>/tags/python/</link>
-      <pubDate>Sun, 03 May 2020 00:00:00 +0000</pubDate>
+      <pubDate>Sat, 09 May 2020 00:00:00 +0000</pubDate>
       
       <guid>/tags/python/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>testing</title>
+      <link>/tags/testing/</link>
+      <pubDate>Sat, 09 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/testing/</guid>
       <description></description>
     </item>
     

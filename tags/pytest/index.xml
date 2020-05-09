@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Posts on roschegel</title>
-    <link>/posts/</link>
-    <description>Recent content in Posts on roschegel</description>
+    <title>pytest on roschegel</title>
+    <link>/tags/pytest/</link>
+    <description>Recent content in pytest on roschegel</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>By Rocio Aramberri</copyright>
     <lastBuildDate>Sat, 09 May 2020 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="/posts/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/tags/pytest/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -21,17 +21,6 @@
       <description>Tests need to be fast. If tests are slow, our development process is affected and we end up spending a considerable amount of time waiting for the results.
 I will go through some of the techniques that I’ve applied to speed up tests on Django applications.
 Tips for speeding up test execution 1. Run your tests in parallel If you are running your tests on multi-core hardware, running your tests in parallel is probably the best optimization you can make if you aren’t doing it yet.</description>
-    </item>
-    
-    <item>
-      <title>Optimizing Django ORM Queries</title>
-      <link>/posts/optimizing-django-orm-queries/</link>
-      <pubDate>Sun, 03 May 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/optimizing-django-orm-queries/</guid>
-      <description>The Django ORM (Object Relational Mapping) is one of the most powerful features of Django. It enables us to interact with the database using Python code instead of SQL.
-It has multiple advantages:
- The database engine is abstracted from us, so it is possible to switch to another database system with ease. It supports migrations: we can easily change our tables by updating our models and Django will automatically generate the migration scripts needed to update the database tables.</description>
     </item>
     
   </channel>

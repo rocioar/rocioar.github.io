@@ -7,10 +7,21 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>By Rocio Aramberri</copyright>
-    <lastBuildDate>Sun, 03 May 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 09 May 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/django/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Making your Django tests faster</title>
+      <link>/posts/making-your-django-tests-faster/</link>
+      <pubDate>Sat, 09 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/making-your-django-tests-faster/</guid>
+      <description>Tests need to be fast. If tests are slow, our development process is affected and we end up spending a considerable amount of time waiting for the results.
+I will go through some of the techniques that I’ve applied to speed up tests on Django applications.
+Tips for speeding up test execution 1. Run your tests in parallel If you are running your tests on multi-core hardware, running your tests in parallel is probably the best optimization you can make if you aren’t doing it yet.</description>
+    </item>
     
     <item>
       <title>Optimizing Django ORM Queries</title>
