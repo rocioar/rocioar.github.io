@@ -176,7 +176,7 @@ Tips for speeding up test execution 1. Run your tests in parallel If you are run
 <h2 id="tips-for-speeding-up-test-execution">Tips for speeding up test execution<a href="#tips-for-speeding-up-test-execution" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <h4 id="1-run-your-tests-in-parallel">1. Run your tests in parallel<a href="#1-run-your-tests-in-parallel" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
 <p>If you are running your tests on multi-core hardware, running your tests in parallel is probably the best optimization you can make if you aren’t doing it yet.</p>
-<p>If you are using pytest, install <a href="https://docs.pytest.org/en/3.0.1/xdist.html">pytest-xdist</a> plugin:</p>
+<p>If you are using pytest, install the <a href="https://docs.pytest.org/en/3.0.1/xdist.html">pytest-xdist</a> plugin:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ pip install pytest-xdist
 </code></pre></div><p>And then run your tests with the <code>-n</code> parameter:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ pytest -n auto
@@ -230,7 +230,7 @@ Tips for speeding up test execution 1. Run your tests in parallel If you are run
 <p>If you just need to know if the tests that were previously failing are still failing, use pytest’s <code>--lf</code> parameter:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ pytest --lf
 </code></pre></div><h2 id="wrapping-up">Wrapping up<a href="#wrapping-up" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
-<p>Ensuring tests run fast is key to having a healthy project. Applying this techniques should help you take your first steps into faster and more efficient tests with Django.</p>
+<p>Ensuring tests run fast is key to having a healthy project. Applying these techniques should help you take your first steps into faster and more efficient tests with Django.</p>
 <p>If your application is big enough you might want to consider applying the <a href="https://www.cosmicpython.com/book/chapter_02_repository.html">Repository Pattern</a> and making your tests completely independent of the database.</p>
 
       </div></div>
