@@ -204,12 +204,12 @@ Tips for speeding up test execution 1. Run your tests in parallel If you are run
 <li>Move it to the specific test where you need it</li>
 </ul>
 <h4 id="4-search-for-the-slowest-tests-and-look-for-possible-optimizations-pytest-only">4. Search for the slowest tests and look for possible optimizations (Pytest only)<a href="#4-search-for-the-slowest-tests-and-look-for-possible-optimizations-pytest-only" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
-<p>Pytest provides a  way to find which are your slowest tests by executing them using the <code>--durations</code> parameter.</p>
-<p>The following command will execute all the tests and print a summary at the end with a list of 5 tests that took the longest to run:</p>
+<p>Pytest provides a way to find which are the slowest tests by executing them using the <code>--durations</code> parameter.</p>
+<p>The following example command will execute all the tests and print a summary at the end with a list of the 5 tests that took the longest to run:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ pytest --durations<span style="color:#f92672">=</span><span style="color:#ae81ff">5</span>
 </code></pre></div><h4 id="5-squash-your-migrations">5. Squash your migrations<a href="#5-squash-your-migrations" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
 <p>Consider squashing your migrations if you have too many. Squashing refers to reducing the number of migrations you have by merging them into one.</p>
-<p>Migrations are run each time you execute your test suite. [Squashing migrations](<a href="https://docs.djangoproject.com/en/3.0/topics/migrations/#migration-squashing">Migrations | Django documentation | Django</a>) would not only speed up your tests but also your development setup.</p>
+<p>Migrations are run each time you execute your test suite. <a href="https://docs.djangoproject.com/en/3.0/topics/migrations/#migration-squashing">Squashing migrations</a> would not only speed up your tests but also your development setup.</p>
 <h2 id="tips-for-speeding-up-your-tests-execution-locally">Tips for speeding up your tests execution locally<a href="#tips-for-speeding-up-your-tests-execution-locally" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <p>When running tests <strong>locally</strong> while developing a new feature, fixing a bug or refactoring, there are few more things you can do to speed up your tests:</p>
 <h4 id="1-re-use-the-database-among-test-runs">1. Re-use the database among test runs<a href="#1-re-use-the-database-among-test-runs" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
