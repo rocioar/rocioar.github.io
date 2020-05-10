@@ -40,9 +40,9 @@ It has multiple advantages:
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/about/</guid>
-      <description>Hi there  I&amp;rsquo;m Rocio Aramberri. I live in Brazil, but I&amp;rsquo;m originally from Uruguay.
-I am a Lead Engineer at BriteCore, where I work with Python/Django and Vue.js.
- Github Twitter Linkedin  </description>
+      <description>About  My name is Rocio Aramberri. I live in Brazil, but I&amp;rsquo;m originally from Uruguay.
+I work remotely as a Lead Engineer at BriteCore. My main areas of expertise are Python, Django, Vue.js, and AWS.
+Sharing knowledge and learning in the process are the main goals of this blog.</description>
     </item>
     
   </channel>
