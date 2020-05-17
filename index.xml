@@ -18,9 +18,174 @@
       <pubDate>Sun, 17 May 2020 00:00:00 +0000</pubDate>
       
       <guid>/posts/simplied-django-tests-with-pytest-and-pytest-factoryboy/</guid>
-      <description>I&amp;rsquo;m always trying to find ways to make tests easier to read and extend. I hate working through a really hard feature and having to spend a big amount of time writing tests.
-Lately, I&amp;rsquo;ve been bothered by the amount of boilerplate on my test code. So, I decided to do some research and look for alternatives.
-When testing Django applications, I use a combination of Pytest fixtures and FactoryBoy to write tests that need database records.</description>
+      <description>&lt;p&gt;I&amp;rsquo;m always trying to find ways to make tests easier to read and extend. I hate working through a really hard feature and having to spend a big amount of time writing tests.&lt;/p&gt;
+&lt;p&gt;Lately, I&amp;rsquo;ve been bothered by the amount of boilerplate on my test code. So, I decided to do some research and look for alternatives.&lt;/p&gt;
+&lt;p&gt;When testing Django applications, I use a combination of &lt;a href=&#34;https://docs.pytest.org/en/latest/&#34;&gt;Pytest&lt;/a&gt; fixtures and  &lt;a href=&#34;https://factoryboy.readthedocs.io/&#34;&gt;FactoryBoy&lt;/a&gt; to write tests that need database records.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Pytest Fixtures&lt;/strong&gt; allow you to abstract the initialization of your test cases into functions (fixtures) and help you re-use code. Pytest uses dependency injection to detect when a fixture is needed on a test by matching the name provided on the parameter with the name of the fixture. Learn more about Pytest Fixtures on the &lt;a href=&#34;https://docs.pytest.org/en/latest/fixture.html&#34;&gt;Pytest documentation&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;FactoryBoy&lt;/strong&gt; allows you to create factories for your models with pre-defined values, which makes it easy to create model objects on the go. It handles relationships by allowing you to define subfactories and integrates with the &lt;a href=&#34;https://faker.readthedocs.io/en/master/&#34;&gt;faker&lt;/a&gt; library to provide the ability to use randomized values. It&amp;rsquo;s a good alternative to Django &lt;a href=&#34;https://docs.djangoproject.com/en/3.0/howto/initial-data/#providing-data-with-fixtures&#34;&gt;fixtures&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;the-problem&#34;&gt;The Problem&lt;/h2&gt;
+&lt;p&gt;Let&amp;rsquo;s look through an example to understand what we are trying to fix.&lt;/p&gt;
+&lt;p&gt;We will write a test case for the following function which returns a list of &lt;code&gt;Post&lt;/code&gt;&#39;s titles:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;get_posts_titles&lt;/span&gt;(include_unpublished&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;False):
+    queryset &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;objects&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;all()
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;not&lt;/span&gt; include_unpublished:
+        queryset &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; queryset&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;filter(status&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt;)
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;  list(queryset&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;values_list(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;title&amp;#34;&lt;/span&gt;, flat&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;True))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;First, in &lt;code&gt;factories.py&lt;/code&gt; we define the factory that will later be used to create the model objects on the test. In this case, it&amp;rsquo;s just a simple database with a &lt;code&gt;Post&lt;/code&gt; model. So we just need one factory:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; factory
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;PostFactory&lt;/span&gt;(factory&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;django&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;DjangoModelFactory):
+    title &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Combining Pytest and FactoryBoy for simplified tests in Django&amp;#34;&lt;/span&gt;
+    status &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;draft&amp;#34;&lt;/span&gt;
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Meta&lt;/span&gt;:
+        model &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog.Post&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then in the &lt;code&gt;test_posts.py&lt;/code&gt; file, we import the factory and create 2 fixtures that use it, &lt;code&gt;post_draft&lt;/code&gt; and &lt;code&gt;post_published&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pytest
+
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; factories &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; PostFactory
+
+
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.fixture&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;post_draft&lt;/span&gt;():
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; PostFactory()
+
+
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.fixture&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;post_published&lt;/span&gt;():
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; PostFactory(status&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt;)
+
+
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.mark.django_db&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;test_get_posts_titles&lt;/span&gt;(post_published, post_draft):
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; get_posts_titles() &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; [post_published&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;title]
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; get_posts_titles(include_unpublished&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;True) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; [post_published&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;title, post_draft&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;title]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Notice the amount of boilerplate on the code, we had to:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;create a &lt;code&gt;PostFactory&lt;/code&gt; on the &lt;code&gt;factories.py&lt;/code&gt; file;&lt;/li&gt;
+&lt;li&gt;create a fixture for a &lt;code&gt;draft&lt;/code&gt; post;&lt;/li&gt;
+&lt;li&gt;create a fixture for a &lt;code&gt;published&lt;/code&gt; post.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;avoiding-boilerplate-code-with-pytest-factoryboy&#34;&gt;Avoiding boilerplate code with pytest-factoryboy&lt;/h2&gt;
+&lt;p&gt;Let&amp;rsquo;s see how we could re-write the code from the previous section using &lt;a href=&#34;https://pytest-factoryboy.readthedocs.io/en/latest/&#34;&gt;pytest-factoryboy&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;We&amp;rsquo;ll still have the factories defined in the &lt;code&gt;factories.py&lt;/code&gt; file:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; factory
+
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;PostFactory&lt;/span&gt;(factory&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;django&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;DjangoModelFactory):
+    title &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Combining Pytest and FactoryBoy for simplified tests in Django&amp;#34;&lt;/span&gt;
+    status &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;draft&amp;#34;&lt;/span&gt;
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Meta&lt;/span&gt;:
+        model &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog.Post&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;But now, we register that factory in &lt;a href=&#34;https://docs.pytest.org/en/2.7.3/plugins.html?highlight=re&#34;&gt;conftests.py&lt;/a&gt; so that it is available as a fixture for all tests:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; pytest_factoryboy &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; register
+
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; factories &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; PostFactory
+
+
+register(PostFactory)
+register(PostFactory, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;draft_post&amp;#34;&lt;/span&gt;, title&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Draft post&amp;#34;&lt;/span&gt;, status&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;draft&amp;#34;&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The fixture will take the name of the Factory (&lt;code&gt;post&lt;/code&gt; by default) but you can optionally provide it a name. Two fixtures will be created: &lt;code&gt;post&lt;/code&gt; and &lt;code&gt;draft_post&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Then, in the tests, we can start using the registered fixtures:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pytest
+
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; blog.utils &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; get_posts_titles
+
+
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.mark.django_db&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;test_get_posts_titles&lt;/span&gt;(post, draft_post):
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; get_posts_titles() &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; [post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;title]
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; get_posts_titles(include_unpublished&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;True) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; [post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;title, draft_post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;title]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Since &lt;code&gt;pytest-factoryboy&lt;/code&gt; took care of registering the factories as fixtures for us, we won&amp;rsquo;t need to:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;manually create the fixtures;&lt;/li&gt;
+&lt;li&gt;manually import the &lt;code&gt;PostFactory&lt;/code&gt; on the test file.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;more-about-pytest-factoryboy&#34;&gt;More about pytest-factoryboy&lt;/h2&gt;
+&lt;p&gt;Being able to register a factory as a fixture is just one of &lt;code&gt;pytest-factoryboy&lt;/code&gt;&#39;s features. Let&amp;rsquo;s see some more.&lt;/p&gt;
+&lt;h4 id=&#34;set-custom-attribute-values-for-you-model-fixtures&#34;&gt;Set custom attribute values for you model fixtures&lt;/h4&gt;
+&lt;p&gt;There will be some test cases in which you need to customize an attribute of your model fixture. You can easily do so using &lt;code&gt;pytest.mark.parametrize&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pytest
+
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; blog.utils &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; get_posts_titles
+
+
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.mark.django_db&lt;/span&gt;
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.mark.parametrize&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post__title&amp;#34;&lt;/span&gt;, [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Custom title&amp;#34;&lt;/span&gt;])
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.mark.parametrize&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post_draft__title&amp;#34;&lt;/span&gt;, [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Custom title - Draft&amp;#34;&lt;/span&gt;])
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;test_get_posts_titles&lt;/span&gt;(post, draft_post):
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; get_posts_titles() &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Custom title&amp;#34;&lt;/span&gt;]
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; get_posts_titles(include_unpublished&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;True) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Custom title&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Custom title - Draft&amp;#34;&lt;/span&gt;]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;override-a-fixtures-value&#34;&gt;Override a fixture&amp;rsquo;s value&lt;/h4&gt;
+&lt;p&gt;If you are modifying the same attribute on multiple test functions within a module, you can opt to override the attribute on the fixture for the entire module. The following code will set &lt;code&gt;post.status&lt;/code&gt; to &lt;code&gt;&amp;quot;draft&amp;quot;&lt;/code&gt; for the entire module:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pytest
+
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; blog.utils &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; get_posts_titles
+
+
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.fixture&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;post__status&lt;/span&gt;():
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&amp;#34;Override blog&amp;#39;s status to draft.&amp;#34;&amp;#34;&amp;#34;&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;draft&amp;#34;&lt;/span&gt;
+
+
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.mark.django_db&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;test_get_posts_titles&lt;/span&gt;(post):
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; get_posts_titles() &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; []
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; get_posts_titles(include_unpublished&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;True) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; [post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;title]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;factories-are-automatically-registered-as-fixtures&#34;&gt;Factories are automatically registered as fixtures&lt;/h4&gt;
+&lt;p&gt;Sometimes you will just want to interact with the factory directly, without using the model fixture (e.g. &lt;code&gt;post&lt;/code&gt;). &lt;code&gt;pytest-factoryboy&lt;/code&gt; automatically registers the factory as a fixture too. Notice that the fixture name is the snake_case version of the factory name:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pytest
+
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; blog.utils &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; get_posts_titles
+
+
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.mark.django_db&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;test_get_posts_titles&lt;/span&gt;(post_factory):
+    post &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; post_factory(status&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;draft&amp;#34;&lt;/span&gt;)
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; get_posts_titles() &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; []
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; get_posts_titles(include_unpublished&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;True) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; [post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;title]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;assign-other-fixtures-as-values-with-parametrize&#34;&gt;Assign other fixtures as values with parametrize&lt;/h4&gt;
+&lt;p&gt;When your models have &lt;code&gt;ForeignKey&lt;/code&gt; relationships you might want to assign another fixture as the value. You can do so using &lt;code&gt;parametrize&lt;/code&gt; and &lt;code&gt;LazyFixture&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Given a &lt;code&gt;Post&lt;/code&gt; with a &lt;code&gt;blog&lt;/code&gt; attribute as a &lt;code&gt;ForeignKey&lt;/code&gt;, we could have the following factories:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; factory
+
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;BlogFactory&lt;/span&gt;(factory&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;django&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;DjangoModelFactory):
+    name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;roschegel&amp;#34;&lt;/span&gt;
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Meta&lt;/span&gt;:
+        model &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog.Blog&amp;#34;&lt;/span&gt;
+
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;PostFactory&lt;/span&gt;(factory&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;django&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;DjangoModelFactory):
+    title &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Combining Pytest and FactoryBoy for simplified tests in Django&amp;#34;&lt;/span&gt;
+    status &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;draft&amp;#34;&lt;/span&gt;
+    blog &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; factory&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;SubFactory(BlogFactory)
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Meta&lt;/span&gt;:
+        model &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog.Post&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;In our test case we could then override the blog attribute using &lt;code&gt;LazyFixture&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pytest
+
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; pytest_factoryboy &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; LazyFixture
+
+
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.fixture&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;blog_2&lt;/span&gt;(blog_factory):
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; blog_factory(name&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;some_other_blog&amp;#34;&lt;/span&gt;)
+
+
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.mark.django_db&lt;/span&gt;
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.mark.parametrize&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post__blog&amp;#34;&lt;/span&gt;, [LazyFixture(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog_2&amp;#34;&lt;/span&gt;)])
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;test_lazy_fixture&lt;/span&gt;(post, blog_2):
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;blog&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;id &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; blog_2&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;id
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;wrapping-up&#34;&gt;Wrapping up&lt;/h2&gt;
+&lt;p&gt;Next time you find yourself writing factories and fixtures that just return instances of your models, consider using &lt;code&gt;pytest-factoryboy&lt;/code&gt;. It will save you a considerable amount of boilerplate code. And that means more time to work on meaningfull stuff, which is always welcome.&lt;/p&gt;
+</description>
     </item>
     
     <item>
@@ -29,9 +194,68 @@ When testing Django applications, I use a combination of Pytest fixtures and Fac
       <pubDate>Sat, 09 May 2020 00:00:00 +0000</pubDate>
       
       <guid>/posts/making-your-django-tests-faster/</guid>
-      <description>Tests need to be fast. If tests are slow, our development process is affected and we end up spending a considerable amount of time waiting for the results.
-I will go through some of the techniques that I’ve applied to speed up tests on Django applications.
-Tips for speeding up test execution 1. Run your tests in parallel If you are running your tests on multi-core hardware, running your tests in parallel is probably the best optimization you can make if you aren’t doing it yet.</description>
+      <description>&lt;p&gt;Tests need to be fast. If tests are slow, our development process is affected and we end up spending a considerable amount of time waiting for the results.&lt;/p&gt;
+&lt;p&gt;I will go through some of the techniques that I’ve applied to speed up tests on Django applications.&lt;/p&gt;
+&lt;h2 id=&#34;tips-for-speeding-up-test-execution&#34;&gt;Tips for speeding up test execution&lt;/h2&gt;
+&lt;h4 id=&#34;1-run-your-tests-in-parallel&#34;&gt;1. Run your tests in parallel&lt;/h4&gt;
+&lt;p&gt;If you are running your tests on multi-core hardware, running your tests in parallel is probably the best optimization you can make if you aren’t doing it yet.&lt;/p&gt;
+&lt;p&gt;If you are using pytest, install the &lt;a href=&#34;https://docs.pytest.org/en/3.0.1/xdist.html&#34;&gt;pytest-xdist&lt;/a&gt; plugin:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ pip install pytest-xdist
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;And then run your tests with the &lt;code&gt;-n&lt;/code&gt; parameter:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ pytest -n auto
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The &lt;code&gt;-n&lt;/code&gt; parameter accepts either a number, indicating the number of cores in which you would like to run the tests, or the value &lt;code&gt;auto&lt;/code&gt; in which case the plugin will automatically detect the number of cores that are available on your machine and use them all.&lt;/p&gt;
+&lt;p&gt;If you are using the Django test runner, simply run the tests using the &lt;code&gt;--parallel&lt;/code&gt; parameter:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ ./manage.py test --parallel
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;You can also indicate the specific number of cores in which you would like your tests to run by providing a number:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ ./manage.py test --parallel &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;2-use-fixtures-for-modularized-setup-pytest-only&#34;&gt;2. Use fixtures for modularized setup (Pytest only)&lt;/h4&gt;
+&lt;p&gt;In the typical xUnit based testing frameworks (such as &lt;a href=&#34;https://docs.python.org/3/library/unittest.html&#34;&gt;unittest&lt;/a&gt;) you create a setup method within your test class in which you set up everything you need for your tests.&lt;/p&gt;
+&lt;p&gt;Pytest fixtures are a replacement for the conventional setup method. To declare a fixture, you create a function and decorate it with the &lt;code&gt;@pytest.fixture&lt;/code&gt; decorator.&lt;/p&gt;
+&lt;p&gt;To use a fixture on a test case you can:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Make it run automatically for each test case with the &lt;code&gt;autouse&lt;/code&gt; parameter: &lt;code&gt;@pytest.fixture(autouse=True)&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Add it to your test case parameter list. This will trigger the fixture to be executed.&lt;/li&gt;
+&lt;li&gt;Add the &lt;code&gt;usefixtures&lt;/code&gt; mark decorator to your test class: &lt;code&gt;@pytest.mark.usefixtures(&amp;quot;your_fixture&amp;quot;)&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;One of the greatest advantages of using fixtures is that you can modularize your setup into smaller and less generic functions.&lt;/p&gt;
+&lt;p&gt;By splitting your setup method into multiple methods, you will be able to select only the ones you need for each test case. This will ensure that you execute exactly what is needed for each test case and nothing else.&lt;/p&gt;
+&lt;h4 id=&#34;3-use-the-database-only-when-it-is-needed&#34;&gt;3. Use the database only when it is needed&lt;/h4&gt;
+&lt;p&gt;It is common to see lots of database records being created on the setup method of a test class. Usually, not all the records are used by all the test cases, but they still get created each time.&lt;/p&gt;
+&lt;p&gt;Make sure you &lt;strong&gt;only&lt;/strong&gt; create the records that will be used by all the tests on your setup method. If there is a database record that is not being used by all the test cases, either:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Move it to a fixture (if you are using pytest)&lt;/li&gt;
+&lt;li&gt;Move it to the specific test where you need it&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;4-search-for-the-slowest-tests-and-look-for-possible-optimizations-pytest-only&#34;&gt;4. Search for the slowest tests and look for possible optimizations (Pytest only)&lt;/h4&gt;
+&lt;p&gt;Pytest provides a way to find which are the slowest tests by executing them using the &lt;code&gt;--durations&lt;/code&gt; parameter.&lt;/p&gt;
+&lt;p&gt;The following example command will execute all the tests and print a summary at the end with a list of the 5 tests that took the longest to run:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ pytest --durations&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;5-squash-your-migrations&#34;&gt;5. Squash your migrations&lt;/h4&gt;
+&lt;p&gt;Consider squashing your migrations if you have too many. Squashing refers to reducing the number of migrations you have by merging them into one.&lt;/p&gt;
+&lt;p&gt;Migrations are run each time you execute your test suite. &lt;a href=&#34;https://docs.djangoproject.com/en/3.0/topics/migrations/#migration-squashing&#34;&gt;Squashing migrations&lt;/a&gt; would not only speed up your tests but also your development setup.&lt;/p&gt;
+&lt;h2 id=&#34;tips-for-speeding-up-your-tests-execution-locally&#34;&gt;Tips for speeding up your tests execution locally&lt;/h2&gt;
+&lt;p&gt;When running tests &lt;strong&gt;locally&lt;/strong&gt; while developing a new feature, fixing a bug or refactoring, there are few more things you can do to speed up your tests:&lt;/p&gt;
+&lt;h4 id=&#34;1-re-use-the-database-among-test-runs&#34;&gt;1. Re-use the database among test runs&lt;/h4&gt;
+&lt;p&gt;Every time you run your Django tests, a new test database is created, this takes a considerable amount of time. When you are not making changes to your models or migration files, you can skip this step by telling the runner that you want to preserve the database among test executions.&lt;/p&gt;
+&lt;p&gt;If you are using Pytest, you can use &lt;a href=&#34;https://pytest-django.readthedocs.io/en/latest/&#34;&gt;pytest-django’s&lt;/a&gt;  &lt;code&gt;--reuse-db&lt;/code&gt;  parameter:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ pytest --reuse-db
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;If you are using the Django test runner you can accomplish the same with the &lt;code&gt;--keep-db&lt;/code&gt; parameter:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ ./manage.py test --keep-db
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;2-disable-migrations-with-no-migrations&#34;&gt;2. Disable Migrations with —no-migrations&lt;/h4&gt;
+&lt;p&gt;When the test runner starts, the database is created and migrations run one by one to reach the current state of your models. If you choose to run your tests without executing the migrations, Django will create the database using the current state of your models.&lt;/p&gt;
+&lt;p&gt;Skipping migrations should be safe unless you are making changes to your migrations, in which case you would also want to ensure they are working as expected.&lt;/p&gt;
+&lt;p&gt;Depending on the number of migrations you have, they could take a lot of time. But most of the time, while testing locally, we don’t need them to run.&lt;/p&gt;
+&lt;p&gt;To disable migrations, include the &lt;code&gt;--no-migrations&lt;/code&gt; parameter:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ pytest --no-migrations
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Or with the Django test runner:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ ./manage.py test --no-migrations
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;3-run-only-the-tests-that-failed-on-the-last-run-pytest-only&#34;&gt;3. Run only the tests that failed on the last run (Pytest only)&lt;/h4&gt;
+&lt;p&gt;If you just need to know if the tests that were previously failing are still failing, use pytest’s &lt;code&gt;--lf&lt;/code&gt; parameter:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ pytest --lf
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;wrapping-up&#34;&gt;Wrapping up&lt;/h2&gt;
+&lt;p&gt;Ensuring tests run fast is key to having a healthy project. Applying these techniques should help you take your first steps into faster and more efficient tests with Django.&lt;/p&gt;
+&lt;p&gt;If your application is big enough you might want to consider applying the &lt;a href=&#34;https://www.cosmicpython.com/book/chapter_02_repository.html&#34;&gt;Repository Pattern&lt;/a&gt; and making your tests completely independent of the database.&lt;/p&gt;
+</description>
     </item>
     
     <item>
@@ -40,9 +264,397 @@ Tips for speeding up test execution 1. Run your tests in parallel If you are run
       <pubDate>Sun, 03 May 2020 00:00:00 +0000</pubDate>
       
       <guid>/posts/optimizing-django-orm-queries/</guid>
-      <description>The Django ORM (Object Relational Mapping) is one of the most powerful features of Django. It enables us to interact with the database using Python code instead of SQL.
-It has multiple advantages:
- The database engine is abstracted from us, so it is possible to switch to another database system with ease. It supports migrations: we can easily change our tables by updating our models and Django will automatically generate the migration scripts needed to update the database tables.</description>
+      <description>&lt;p&gt;The Django ORM (Object Relational Mapping) is one of the most powerful features of Django. It enables us to interact with the database using Python code instead of SQL.&lt;/p&gt;
+&lt;p&gt;It has multiple advantages:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;The database engine is abstracted from us, so it is possible to switch to another database system with ease.&lt;/li&gt;
+&lt;li&gt;It supports &lt;a href=&#34;https://docs.djangoproject.com/en/3.0/topics/migrations/&#34;&gt;migrations&lt;/a&gt;: we can easily change our tables by updating our models and Django will automatically generate the migration scripts needed to update the database tables.&lt;/li&gt;
+&lt;li&gt;It supports &lt;a href=&#34;https://docs.djangoproject.com/en/3.0/topics/db/transactions/&#34;&gt;transactions&lt;/a&gt;: you can make multiple updates to the database within a transaction and, if something fails, roll it back to the way it was when you started.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;But it also comes with some disadvantages:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Since it is an abstraction on top of SQL, it is obscure, and we don’t know exactly which SQL queries will be generated from our Python code.&lt;/li&gt;
+&lt;li&gt;Django has no way to guess when we will need to use a related table, so it won’t do JOINs for us when we need them.&lt;/li&gt;
+&lt;li&gt;The ORM gives us the wrong sensation that what we are doing is not expensive. We have no easy way to know that accessing an attribute in an object might trigger a query to the database that could have been prevented with a JOIN.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;To overcome the disadvantages we need to become more acquainted with it and understand what is happening under the hood.&lt;/p&gt;
+&lt;h2 id=&#34;find-out-whats-happening-under-the-hood&#34;&gt;Find out what’s happening under the hood&lt;/h2&gt;
+&lt;p&gt;First, we need to understand what is happening in our system, which SQL queries are being run, and what’s costing us the most.&lt;/p&gt;
+&lt;p&gt;Here are some different mechanisms to inspect SQL queries as they are executed:&lt;/p&gt;
+&lt;h4 id=&#34;1-connectionqueries&#34;&gt;1. connection.queries&lt;/h4&gt;
+&lt;p&gt;When &lt;code&gt;debug=True&lt;/code&gt;, it is possible to access the queries that have been executed by printing &lt;code&gt;connection.queries&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; django.db &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; connection
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; Post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;objects&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;all()
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; connection&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;queries
+[
+   {
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;sql&amp;#39;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;SELECT &amp;#34;blogposts_post&amp;#34;.&amp;#34;id&amp;#34;, &amp;#34;blogposts_post&amp;#34;.&amp;#34;title&amp;#34;, &amp;#39;&lt;/span&gt;
+             &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#34;blogposts_post&amp;#34;.&amp;#34;content&amp;#34;, &amp;#34;blogposts_post&amp;#34;.&amp;#34;blog_id&amp;#34;, &amp;#39;&lt;/span&gt;
+             &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#34;blogposts_post&amp;#34;.&amp;#34;published&amp;#34; FROM &amp;#34;blogposts_post&amp;#34; LIMIT 21&amp;#39;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;time&amp;#39;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;0.000&amp;#39;&lt;/span&gt;
+   }
+]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;connection.queries&lt;/code&gt; holds a list of SQL queries in the form of dictionaries containing the SQL code and the time it took to run.&lt;/p&gt;
+&lt;p&gt;The queries list could get convoluted very easily. To fix that, Django provides a way to clean them up:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; django.db &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; reset_queries
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; reset_queries()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;2-shell_plus---print-sql&#34;&gt;2. shell_plus &amp;ndash;print-sql&lt;/h4&gt;
+&lt;p&gt;The &lt;a href=&#34;https://github.com/django-extensions/&#34;&gt;django-extensions&lt;/a&gt; project is great and comes with a handful of useful features.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;shell_plus&lt;/code&gt; is one of them. It’s a Django shell with extra additions. If you call it with the &lt;code&gt;--print-sql&lt;/code&gt; parameter, it will print the SQL queries as they are executed when you run your code.&lt;/p&gt;
+&lt;p&gt;I will use &lt;code&gt;shell_plus&lt;/code&gt; throughout this post so that you can see the SQL queries that are being executed as the code is ran.&lt;/p&gt;
+&lt;p&gt;Here is a quick example of how the output would look like:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;$&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;./&lt;/span&gt;manage&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;py shell_plus &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;sql
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; post &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;objects&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;get(id&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+SELECT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+     	&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;title&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;content&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog_id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;
+ORDER BY &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt; ASC
+LIMIT &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;3-django-silk&#34;&gt;3. django-silk&lt;/h4&gt;
+&lt;p&gt;&lt;a href=&#34;https://github.com/jazzband/django-silk&#34;&gt;django-silk&lt;/a&gt; is a profiling tool. It intercepts requests, records the SQL queries that were performed, and provides a way to visualize them.&lt;/p&gt;
+&lt;p&gt;You will be able to browse through the requests, see a list of SQL queries that were performed, and look at the details about a specific query including which line of code caused a certain query to run.&lt;/p&gt;
+&lt;h4 id=&#34;4-django-debug-toolbar&#34;&gt;4. django-debug-toolbar&lt;/h4&gt;
+&lt;p&gt;&lt;a href=&#34;https://github.com/jazzband/django-debug-toolbar&#34;&gt;django-debug-toolbar&lt;/a&gt; adds a toolbar on your browser that will show you lots of debugging information while you browse your Django project. Using it, you can see the number of SQL queries that were performed on a request. It is also possible to inspect these queries further, check the SQL code and see in which order they were performed and how much time each one took.&lt;/p&gt;
+&lt;h2 id=&#34;optimize-your-queries&#34;&gt;Optimize your queries&lt;/h2&gt;
+&lt;h3 id=&#34;introducing-an-example-database-model&#34;&gt;Introducing an Example Database Model&lt;/h3&gt;
+&lt;p&gt;We will use the following database models as an example for the upcoming sections:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Blog&lt;/span&gt;(models&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Model):
+   name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; models&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;CharField(max_length&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;250&lt;/span&gt;)
+   url &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; models&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;URLField()
+
+   &lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; __str__(self):
+       &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;name
+
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Author&lt;/span&gt;(models&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Model):
+   name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; models&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;CharField(max_length&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;250&lt;/span&gt;)
+   email &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; models&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;EmailField()
+
+   &lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; __str__(self):
+       &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;name
+
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Post&lt;/span&gt;(models&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Model):
+   title &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; models&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;CharField(max_length&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;250&lt;/span&gt;)
+   content &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; models&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;TextField()
+   published &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; models&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;BooleanField(default&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;False)
+
+   blog &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; models&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;ForeignKey(Blog, on_delete&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;models&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;CASCADE)
+   authors &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; models&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;ManyToManyField(Author, related_name&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;posts&amp;#34;&lt;/span&gt;)
+
+   &lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; __str__(self):
+       &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;title
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;use-cached-foreign-key-ids&#34;&gt;Use cached Foreign Key ids&lt;/h3&gt;
+&lt;p&gt;If we just need to access the &lt;code&gt;id&lt;/code&gt; of a &lt;code&gt;ForeignKey&lt;/code&gt; field, we can use the cached id that Django already has cached for us via &lt;code&gt;&amp;lt;field_name&amp;gt;_id&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Let see it through an example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; Post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;objects&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;first()&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;blog&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;id
+SELECT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;title&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;content&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog_id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;
+ORDER BY &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt; ASC
+LIMIT &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.001668&lt;/span&gt;s [Database: default]
+SELECT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_blog&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_blog&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_blog&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;url&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_blog&amp;#34;&lt;/span&gt;
+WHERE &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_blog&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+LIMIT &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;
+
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.000197&lt;/span&gt;s [Database: default]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Accessing the blog&amp;rsquo;s &lt;code&gt;id&lt;/code&gt; through the nested object &lt;code&gt;blog&lt;/code&gt; generated a new SQL query to obtain the entire blog object. But since we won’t need to access any other attribute from the blog object, we could completely avoid the above query from being executed by doing:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; Post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;objects&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;first()&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;blog_id
+SELECT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;title&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;content&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog_id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;
+ORDER BY &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt; ASC
+LIMIT &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.000165&lt;/span&gt;s [Database: default]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;let-django-know-what-you-will-need-in-advance&#34;&gt;Let Django know what you will need in advance&lt;/h3&gt;
+&lt;h4 id=&#34;use-select_related-for-foreign-keys&#34;&gt;Use select_related for Foreign Keys&lt;/h4&gt;
+&lt;p&gt;Django has no way of anticipating when we will need to access a &lt;code&gt;ForeignKey&lt;/code&gt; relationship from within the model we are querying. The &lt;a href=&#34;https://docs.djangoproject.com/en/3.0/ref/models/querysets/#select-related&#34;&gt;select_related&lt;/a&gt; utility allows us to tell Django exactly which related models we want, so that it can perform JOINs.&lt;/p&gt;
+&lt;p&gt;In our example, we have a &lt;code&gt;Post&lt;/code&gt; model. A &lt;code&gt;Post&lt;/code&gt; belongs to a specific &lt;code&gt;Blog&lt;/code&gt;. This relationship is represented on the database through a &lt;code&gt;ForeignKey&lt;/code&gt; from the &lt;code&gt;Post&lt;/code&gt; to the &lt;code&gt;Blog&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;To access a specific &lt;code&gt;Post&lt;/code&gt; object we could do:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; post &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;objects&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;get(id&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+SELECT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;title&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;content&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog_id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;
+ORDER BY &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt; ASC
+LIMIT &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;If we wanted to access the &lt;code&gt;Blog&lt;/code&gt; object from within the &lt;code&gt;Post&lt;/code&gt;, we could do:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;blog
+SELECT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_blog&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_blog&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_blog&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;url&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_blog&amp;#34;&lt;/span&gt;
+WHERE &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_blog&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+LIMIT &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;
+
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.000602&lt;/span&gt;s [Database: default]
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Blog: Rocio&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;s Blog&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;However, this statement generated a new query to grab the information from the blog. We want to avoid that. This is when &lt;code&gt;select_related&lt;/code&gt; comes to our rescue. To use it we can update our original query to be:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; post &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;objects&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;select_related(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog&amp;#34;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;get(id&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+SELECT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;title&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;content&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog_id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_blog&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_blog&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_blog&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;url&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;
+INNER JOIN &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_blog&amp;#34;&lt;/span&gt;
+   ON (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog_id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_blog&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;)
+WHERE &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+LIMIT &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;
+
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.000150&lt;/span&gt;s [Database: default]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Notice now how Django used a &lt;code&gt;JOIN&lt;/code&gt; on the SQL query above to also grab the attributes from the blog table for us. Now, when accessing the &lt;code&gt;Blog&lt;/code&gt; object from within the &lt;code&gt;Post&lt;/code&gt;, it will not require an extra query since it will already be cached:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;blog
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Blog: Rocio&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;s Blog&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;select_related&lt;/code&gt; also works for querysets. We could pre-select the blog object for an entire queryset. If there were 50 Posts and we didn’t use &lt;code&gt;select_related&lt;/code&gt; to pre-select the blog object, it would take Django 50 queries to run the following code. With &lt;code&gt;select_related&lt;/code&gt; it just takes one:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; posts &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;objects&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;select_related(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog&amp;#34;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;all()
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; post &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; posts:
+       post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;blog
+
+SELECT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;title&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;content&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog_id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_blog&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_blog&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_blog&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;url&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;
+INNER JOIN &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_blog&amp;#34;&lt;/span&gt;
+   ON (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog_id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_blog&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;)
+
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.000224&lt;/span&gt;s [Database: default]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;use-prefetch_related-for-manytomany-fields&#34;&gt;Use prefetch_related for ManyToMany fields&lt;/h4&gt;
+&lt;p&gt;&lt;a href=&#34;https://docs.djangoproject.com/en/3.0/ref/models/querysets/#prefetch-related&#34;&gt;prefetch_related&lt;/a&gt; is similar to &lt;code&gt;select_related&lt;/code&gt;, but it is used for pre-selecting &lt;code&gt;ManyToMany&lt;/code&gt; fields. &lt;code&gt;prefetch_related&lt;/code&gt; works differently, let’s see it through an example.&lt;/p&gt;
+&lt;p&gt;Let’s say we wanted to grab all the Posts and then print the Authors for each of the Posts. We could do the following:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; post &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; Post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;objects&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;all():
+       post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;authors&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;all()
+
+SELECT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;title&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;content&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog_id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;
+
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.000158&lt;/span&gt;s [Database: default]
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;QuerySet []&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+SELECT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;email&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;
+INNER JOIN &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;
+   ON (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;author_id&amp;#34;&lt;/span&gt;)
+WHERE &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post_id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+LIMIT &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;
+
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.000101&lt;/span&gt;s [Database: default]
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;QuerySet []&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+SELECT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;email&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;
+INNER JOIN &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;
+   ON (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;author_id&amp;#34;&lt;/span&gt;)
+WHERE &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post_id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;
+LIMIT &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.001043&lt;/span&gt;s [Database: default]
+
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.000101&lt;/span&gt;s [Database: default]
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;QuerySet []&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+SELECT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;email&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;
+INNER JOIN &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;
+   ON (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;author_id&amp;#34;&lt;/span&gt;)
+WHERE &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post_id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;
+LIMIT &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.001043&lt;/span&gt;s [Database: default]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Notice that the code above generated 4 queries, one to grab the posts, and then one query for each of the posts to grab the authors (there were 3 posts in total).&lt;/p&gt;
+&lt;p&gt;This is the famous N + 1 problem. Given N posts, N + 1 queries will be performed. In this scenario we have 3 posts, which translate to 4 queries. It isn’t that much, but this could very easily escalate as we create new Posts. With 50 Posts, this code would generate 51 queries.&lt;/p&gt;
+&lt;p&gt;To avoid that, we could pre-select the Authors by using &lt;code&gt;prefetch_related&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; post &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; Post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;objects&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;prefetch_related(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;authors&amp;#34;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;all():
+       post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;authors&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;all()
+
+SELECT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;title&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;content&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog_id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;
+
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.000158&lt;/span&gt;s [Database: default]
+SELECT (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post_id&amp;#34;&lt;/span&gt;) AS &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;_prefetch_related_val_post_id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;email&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;
+INNER JOIN &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;
+   ON (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;author_id&amp;#34;&lt;/span&gt;)
+WHERE &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post_id&amp;#34;&lt;/span&gt; IN (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;)
+
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.001043&lt;/span&gt;s [Database: default]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;With our updated code only 2 queries were performed. When &lt;code&gt;prefetch_related&lt;/code&gt; is used, Django first grabs all the posts and then runs another SQL query that retrieves all the authors for all the posts.&lt;/p&gt;
+&lt;h4 id=&#34;customizing-prefetch&#34;&gt;Customizing Prefetch&lt;/h4&gt;
+&lt;p&gt;In some scenarios &lt;code&gt;prefetch_related&lt;/code&gt; basic syntax is not enough to prevent Django from doing extra queries. To further control the prefetch you can use the &lt;code&gt;Prefetch&lt;/code&gt; object.&lt;/p&gt;
+&lt;p&gt;In our example database, there is a &lt;code&gt;Post&lt;/code&gt; model and an &lt;code&gt;Author&lt;/code&gt; model. The &lt;code&gt;Post&lt;/code&gt; model is related to the &lt;code&gt;Author&lt;/code&gt; model through a &lt;code&gt;ManyToMany&lt;/code&gt; field. Let’s say we wanted to go author by author and grab all the posts that were published by that author:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; authors &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Author&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;objects&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;all()
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; author &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; authors:
+       &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt;(author&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;posts&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;filter(published&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;True))
+
+SELECT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;email&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;
+
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.000251&lt;/span&gt;s [Database: default]
+SELECT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;title&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;content&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog_id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;
+INNER JOIN &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;
+   ON (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post_id&amp;#34;&lt;/span&gt;)
+WHERE (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;author_id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; AND &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+LIMIT &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;
+
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.000178&lt;/span&gt;s [Database: default]
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;QuerySet [&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Optimizing Django ORM Queries&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post &lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post &lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;]&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+SELECT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;title&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;content&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog_id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;
+INNER JOIN &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;
+   ON (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post_id&amp;#34;&lt;/span&gt;)
+WHERE (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;author_id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; AND &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+LIMIT &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;
+
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.000081&lt;/span&gt;s [Database: default]
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;QuerySet [&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Optimizing Django ORM Queries&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;]&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As you can see, the above code generated 3 queries, 1 to grab the author, and then 2 queries to grab the posts for each of the authors.&lt;/p&gt;
+&lt;p&gt;What if we used &lt;code&gt;prefetch_related&lt;/code&gt;? It seems to be the right thing to do:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; authors &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Author&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;objects&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;prefetch_related(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;posts&amp;#34;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;all()
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; author &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; authors:
+       &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt;(author&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;posts&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;filter(published&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;True))
+
+SELECT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;email&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;
+
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.000097&lt;/span&gt;s [Database: default]
+SELECT (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;author_id&amp;#34;&lt;/span&gt;) AS &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;_prefetch_related_val_author_id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;title&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;content&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog_id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;
+INNER JOIN &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;
+   ON (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post_id&amp;#34;&lt;/span&gt;)
+WHERE &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;author_id&amp;#34;&lt;/span&gt; IN (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;)
+
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.000190&lt;/span&gt;s [Database: default]
+SELECT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;title&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;content&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog_id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;
+INNER JOIN &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;
+   ON (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post_id&amp;#34;&lt;/span&gt;)
+WHERE (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;author_id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; AND &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+LIMIT &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;
+
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.000074&lt;/span&gt;s [Database: default]
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;QuerySet [&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Optimizing Django ORM Queries&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;,
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;,
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;,
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post &lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;,
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post &lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;]&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+SELECT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;title&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;content&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog_id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;
+INNER JOIN &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;
+   ON (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post_id&amp;#34;&lt;/span&gt;)
+WHERE (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;author_id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; AND &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+LIMIT &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;
+
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.000070&lt;/span&gt;s [Database: default]
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;QuerySet [&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Optimizing Django ORM Queries&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;]&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;What did just happen? We used &lt;code&gt;prefetch_related&lt;/code&gt; to reduce the number of queries, and we actually increased it by 1.&lt;/p&gt;
+&lt;p&gt;This is happening because we are filtering the posts with &lt;code&gt;published=True&lt;/code&gt;. Django can’t use our cached posts since they were not filtered when they were queried. To avoid this from happening, we can customize the queryset using the &lt;code&gt;Prefetch&lt;/code&gt; object:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; authors &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Author&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;objects&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;prefetch_related(
+       Prefetch(
+          &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;posts&amp;#34;&lt;/span&gt;,
+          queryset&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;Post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;objects&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;filter(published&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;True),
+          to_attr&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published_posts&amp;#34;&lt;/span&gt;,
+       )
+    )
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; author &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; authors:
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt;(author&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;published_posts)
+
+SELECT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;email&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_author&amp;#34;&lt;/span&gt;
+
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.000129&lt;/span&gt;s [Database: default]
+SELECT (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;author_id&amp;#34;&lt;/span&gt;) AS &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;_prefetch_related_val_author_id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;title&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;content&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog_id&amp;#34;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt;
+ FROM &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;
+INNER JOIN &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;
+   ON (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post_id&amp;#34;&lt;/span&gt;)
+WHERE (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; AND &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blogposts_post_authors&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;author_id&amp;#34;&lt;/span&gt; IN (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;))
+
+Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.000089&lt;/span&gt;s [Database: default]
+[&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Optimizing Django ORM Queries&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;,
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;,
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;,
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post &lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;,
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Placeholder Post &lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;]
+[&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post: Optimizing Django ORM Queries&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;We used the &lt;code&gt;Prefetch&lt;/code&gt; object to tell Django to:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Use a specific queryset to retrieve the posts - through the &lt;code&gt;queryset&lt;/code&gt; parameter.&lt;/li&gt;
+&lt;li&gt;Store the filtered posts in a new attribute (&lt;code&gt;published_posts&lt;/code&gt;) - through the &lt;code&gt;to_attr&lt;/code&gt; parameter.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;When &lt;code&gt;author.published_posts&lt;/code&gt; is executed, no queries will be run since everything will already be cached. No matter the number of authors on our system, the operation will always take 2 SQL queries.&lt;/p&gt;
+&lt;h2 id=&#34;wrapping-up&#34;&gt;Wrapping up&lt;/h2&gt;
+&lt;p&gt;While working with the Django ORM, it is extremely important that we think about what’s happening under the hood.&lt;/p&gt;
+&lt;p&gt;The concepts that you learned on this blog post will help you write more optimized queries and be in the lookout for possible optimizations while reviewing code. Beware though, that you should always measure the time a query is taking before and after the optimization to ensure that the optimization worked. Sometimes less queries doesn&amp;rsquo;t necessairly mean less time, JOINs could be expensive too.&lt;/p&gt;
+</description>
     </item>
     
     <item>
@@ -51,9 +663,18 @@ It has multiple advantages:
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/about/</guid>
-      <description>About  My name is Rocio Aramberri. I live in Brazil, but I&amp;rsquo;m originally from Uruguay.
-I work remotely as a Lead Engineer at BriteCore. My main areas of expertise are Python, Django, Vue.js, and AWS.
-Sharing knowledge and learning in the process are the main goals of this blog.</description>
+      <description>&lt;h1 id=&#34;about&#34;&gt;About&lt;/h1&gt;
+
+  &lt;figure class=&#34;center&#34; &gt;
+    &lt;img src=&#34;/img/photo.jpg&#34;   style=&#34;border-radius: 8px; width:219px; height:291px;&#34;  /&gt;
+    
+  &lt;/figure&gt;
+
+
+&lt;p&gt;My name is Rocio Aramberri. I live in Brazil, but I&amp;rsquo;m originally from Uruguay.&lt;/p&gt;
+&lt;p&gt;I work remotely as a Lead Engineer at &lt;a href=&#34;https://britecore.com&#34;&gt;BriteCore&lt;/a&gt;. My main areas of expertise are Python, Django, Vue.js, and AWS.&lt;/p&gt;
+&lt;p&gt;Sharing knowledge and learning in the process are the main goals of this blog.&lt;/p&gt;
+</description>
     </item>
     
   </channel>

@@ -18,9 +18,174 @@
       <pubDate>Sun, 17 May 2020 00:00:00 +0000</pubDate>
       
       <guid>/posts/simplied-django-tests-with-pytest-and-pytest-factoryboy/</guid>
-      <description>I&amp;rsquo;m always trying to find ways to make tests easier to read and extend. I hate working through a really hard feature and having to spend a big amount of time writing tests.
-Lately, I&amp;rsquo;ve been bothered by the amount of boilerplate on my test code. So, I decided to do some research and look for alternatives.
-When testing Django applications, I use a combination of Pytest fixtures and FactoryBoy to write tests that need database records.</description>
+      <description>&lt;p&gt;I&amp;rsquo;m always trying to find ways to make tests easier to read and extend. I hate working through a really hard feature and having to spend a big amount of time writing tests.&lt;/p&gt;
+&lt;p&gt;Lately, I&amp;rsquo;ve been bothered by the amount of boilerplate on my test code. So, I decided to do some research and look for alternatives.&lt;/p&gt;
+&lt;p&gt;When testing Django applications, I use a combination of &lt;a href=&#34;https://docs.pytest.org/en/latest/&#34;&gt;Pytest&lt;/a&gt; fixtures and  &lt;a href=&#34;https://factoryboy.readthedocs.io/&#34;&gt;FactoryBoy&lt;/a&gt; to write tests that need database records.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Pytest Fixtures&lt;/strong&gt; allow you to abstract the initialization of your test cases into functions (fixtures) and help you re-use code. Pytest uses dependency injection to detect when a fixture is needed on a test by matching the name provided on the parameter with the name of the fixture. Learn more about Pytest Fixtures on the &lt;a href=&#34;https://docs.pytest.org/en/latest/fixture.html&#34;&gt;Pytest documentation&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;FactoryBoy&lt;/strong&gt; allows you to create factories for your models with pre-defined values, which makes it easy to create model objects on the go. It handles relationships by allowing you to define subfactories and integrates with the &lt;a href=&#34;https://faker.readthedocs.io/en/master/&#34;&gt;faker&lt;/a&gt; library to provide the ability to use randomized values. It&amp;rsquo;s a good alternative to Django &lt;a href=&#34;https://docs.djangoproject.com/en/3.0/howto/initial-data/#providing-data-with-fixtures&#34;&gt;fixtures&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;the-problem&#34;&gt;The Problem&lt;/h2&gt;
+&lt;p&gt;Let&amp;rsquo;s look through an example to understand what we are trying to fix.&lt;/p&gt;
+&lt;p&gt;We will write a test case for the following function which returns a list of &lt;code&gt;Post&lt;/code&gt;&#39;s titles:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;get_posts_titles&lt;/span&gt;(include_unpublished&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;False):
+    queryset &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;objects&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;all()
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;not&lt;/span&gt; include_unpublished:
+        queryset &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; queryset&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;filter(status&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt;)
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;  list(queryset&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;values_list(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;title&amp;#34;&lt;/span&gt;, flat&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;True))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;First, in &lt;code&gt;factories.py&lt;/code&gt; we define the factory that will later be used to create the model objects on the test. In this case, it&amp;rsquo;s just a simple database with a &lt;code&gt;Post&lt;/code&gt; model. So we just need one factory:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; factory
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;PostFactory&lt;/span&gt;(factory&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;django&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;DjangoModelFactory):
+    title &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Combining Pytest and FactoryBoy for simplified tests in Django&amp;#34;&lt;/span&gt;
+    status &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;draft&amp;#34;&lt;/span&gt;
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Meta&lt;/span&gt;:
+        model &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog.Post&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then in the &lt;code&gt;test_posts.py&lt;/code&gt; file, we import the factory and create 2 fixtures that use it, &lt;code&gt;post_draft&lt;/code&gt; and &lt;code&gt;post_published&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pytest
+
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; factories &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; PostFactory
+
+
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.fixture&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;post_draft&lt;/span&gt;():
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; PostFactory()
+
+
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.fixture&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;post_published&lt;/span&gt;():
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; PostFactory(status&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;published&amp;#34;&lt;/span&gt;)
+
+
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.mark.django_db&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;test_get_posts_titles&lt;/span&gt;(post_published, post_draft):
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; get_posts_titles() &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; [post_published&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;title]
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; get_posts_titles(include_unpublished&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;True) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; [post_published&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;title, post_draft&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;title]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Notice the amount of boilerplate on the code, we had to:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;create a &lt;code&gt;PostFactory&lt;/code&gt; on the &lt;code&gt;factories.py&lt;/code&gt; file;&lt;/li&gt;
+&lt;li&gt;create a fixture for a &lt;code&gt;draft&lt;/code&gt; post;&lt;/li&gt;
+&lt;li&gt;create a fixture for a &lt;code&gt;published&lt;/code&gt; post.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;avoiding-boilerplate-code-with-pytest-factoryboy&#34;&gt;Avoiding boilerplate code with pytest-factoryboy&lt;/h2&gt;
+&lt;p&gt;Let&amp;rsquo;s see how we could re-write the code from the previous section using &lt;a href=&#34;https://pytest-factoryboy.readthedocs.io/en/latest/&#34;&gt;pytest-factoryboy&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;We&amp;rsquo;ll still have the factories defined in the &lt;code&gt;factories.py&lt;/code&gt; file:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; factory
+
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;PostFactory&lt;/span&gt;(factory&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;django&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;DjangoModelFactory):
+    title &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Combining Pytest and FactoryBoy for simplified tests in Django&amp;#34;&lt;/span&gt;
+    status &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;draft&amp;#34;&lt;/span&gt;
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Meta&lt;/span&gt;:
+        model &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog.Post&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;But now, we register that factory in &lt;a href=&#34;https://docs.pytest.org/en/2.7.3/plugins.html?highlight=re&#34;&gt;conftests.py&lt;/a&gt; so that it is available as a fixture for all tests:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; pytest_factoryboy &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; register
+
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; factories &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; PostFactory
+
+
+register(PostFactory)
+register(PostFactory, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;draft_post&amp;#34;&lt;/span&gt;, title&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Draft post&amp;#34;&lt;/span&gt;, status&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;draft&amp;#34;&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The fixture will take the name of the Factory (&lt;code&gt;post&lt;/code&gt; by default) but you can optionally provide it a name. Two fixtures will be created: &lt;code&gt;post&lt;/code&gt; and &lt;code&gt;draft_post&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Then, in the tests, we can start using the registered fixtures:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pytest
+
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; blog.utils &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; get_posts_titles
+
+
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.mark.django_db&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;test_get_posts_titles&lt;/span&gt;(post, draft_post):
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; get_posts_titles() &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; [post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;title]
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; get_posts_titles(include_unpublished&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;True) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; [post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;title, draft_post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;title]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Since &lt;code&gt;pytest-factoryboy&lt;/code&gt; took care of registering the factories as fixtures for us, we won&amp;rsquo;t need to:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;manually create the fixtures;&lt;/li&gt;
+&lt;li&gt;manually import the &lt;code&gt;PostFactory&lt;/code&gt; on the test file.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;more-about-pytest-factoryboy&#34;&gt;More about pytest-factoryboy&lt;/h2&gt;
+&lt;p&gt;Being able to register a factory as a fixture is just one of &lt;code&gt;pytest-factoryboy&lt;/code&gt;&#39;s features. Let&amp;rsquo;s see some more.&lt;/p&gt;
+&lt;h4 id=&#34;set-custom-attribute-values-for-you-model-fixtures&#34;&gt;Set custom attribute values for you model fixtures&lt;/h4&gt;
+&lt;p&gt;There will be some test cases in which you need to customize an attribute of your model fixture. You can easily do so using &lt;code&gt;pytest.mark.parametrize&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pytest
+
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; blog.utils &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; get_posts_titles
+
+
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.mark.django_db&lt;/span&gt;
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.mark.parametrize&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post__title&amp;#34;&lt;/span&gt;, [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Custom title&amp;#34;&lt;/span&gt;])
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.mark.parametrize&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post_draft__title&amp;#34;&lt;/span&gt;, [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Custom title - Draft&amp;#34;&lt;/span&gt;])
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;test_get_posts_titles&lt;/span&gt;(post, draft_post):
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; get_posts_titles() &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Custom title&amp;#34;&lt;/span&gt;]
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; get_posts_titles(include_unpublished&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;True) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Custom title&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Custom title - Draft&amp;#34;&lt;/span&gt;]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;override-a-fixtures-value&#34;&gt;Override a fixture&amp;rsquo;s value&lt;/h4&gt;
+&lt;p&gt;If you are modifying the same attribute on multiple test functions within a module, you can opt to override the attribute on the fixture for the entire module. The following code will set &lt;code&gt;post.status&lt;/code&gt; to &lt;code&gt;&amp;quot;draft&amp;quot;&lt;/code&gt; for the entire module:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pytest
+
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; blog.utils &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; get_posts_titles
+
+
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.fixture&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;post__status&lt;/span&gt;():
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&amp;#34;Override blog&amp;#39;s status to draft.&amp;#34;&amp;#34;&amp;#34;&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;draft&amp;#34;&lt;/span&gt;
+
+
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.mark.django_db&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;test_get_posts_titles&lt;/span&gt;(post):
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; get_posts_titles() &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; []
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; get_posts_titles(include_unpublished&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;True) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; [post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;title]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;factories-are-automatically-registered-as-fixtures&#34;&gt;Factories are automatically registered as fixtures&lt;/h4&gt;
+&lt;p&gt;Sometimes you will just want to interact with the factory directly, without using the model fixture (e.g. &lt;code&gt;post&lt;/code&gt;). &lt;code&gt;pytest-factoryboy&lt;/code&gt; automatically registers the factory as a fixture too. Notice that the fixture name is the snake_case version of the factory name:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pytest
+
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; blog.utils &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; get_posts_titles
+
+
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.mark.django_db&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;test_get_posts_titles&lt;/span&gt;(post_factory):
+    post &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; post_factory(status&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;draft&amp;#34;&lt;/span&gt;)
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; get_posts_titles() &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; []
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; get_posts_titles(include_unpublished&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;True) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; [post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;title]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;assign-other-fixtures-as-values-with-parametrize&#34;&gt;Assign other fixtures as values with parametrize&lt;/h4&gt;
+&lt;p&gt;When your models have &lt;code&gt;ForeignKey&lt;/code&gt; relationships you might want to assign another fixture as the value. You can do so using &lt;code&gt;parametrize&lt;/code&gt; and &lt;code&gt;LazyFixture&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Given a &lt;code&gt;Post&lt;/code&gt; with a &lt;code&gt;blog&lt;/code&gt; attribute as a &lt;code&gt;ForeignKey&lt;/code&gt;, we could have the following factories:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; factory
+
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;BlogFactory&lt;/span&gt;(factory&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;django&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;DjangoModelFactory):
+    name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;roschegel&amp;#34;&lt;/span&gt;
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Meta&lt;/span&gt;:
+        model &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog.Blog&amp;#34;&lt;/span&gt;
+
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;PostFactory&lt;/span&gt;(factory&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;django&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;DjangoModelFactory):
+    title &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Combining Pytest and FactoryBoy for simplified tests in Django&amp;#34;&lt;/span&gt;
+    status &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;draft&amp;#34;&lt;/span&gt;
+    blog &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; factory&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;SubFactory(BlogFactory)
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Meta&lt;/span&gt;:
+        model &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog.Post&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;In our test case we could then override the blog attribute using &lt;code&gt;LazyFixture&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pytest
+
+&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; pytest_factoryboy &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; LazyFixture
+
+
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.fixture&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;blog_2&lt;/span&gt;(blog_factory):
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; blog_factory(name&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;some_other_blog&amp;#34;&lt;/span&gt;)
+
+
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.mark.django_db&lt;/span&gt;
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@pytest.mark.parametrize&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post__blog&amp;#34;&lt;/span&gt;, [LazyFixture(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;blog_2&amp;#34;&lt;/span&gt;)])
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;test_lazy_fixture&lt;/span&gt;(post, blog_2):
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;blog&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;id &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; blog_2&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;id
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;wrapping-up&#34;&gt;Wrapping up&lt;/h2&gt;
+&lt;p&gt;Next time you find yourself writing factories and fixtures that just return instances of your models, consider using &lt;code&gt;pytest-factoryboy&lt;/code&gt;. It will save you a considerable amount of boilerplate code. And that means more time to work on meaningfull stuff, which is always welcome.&lt;/p&gt;
+</description>
     </item>
     
     <item>
@@ -29,9 +194,68 @@ When testing Django applications, I use a combination of Pytest fixtures and Fac
       <pubDate>Sat, 09 May 2020 00:00:00 +0000</pubDate>
       
       <guid>/posts/making-your-django-tests-faster/</guid>
-      <description>Tests need to be fast. If tests are slow, our development process is affected and we end up spending a considerable amount of time waiting for the results.
-I will go through some of the techniques that I’ve applied to speed up tests on Django applications.
-Tips for speeding up test execution 1. Run your tests in parallel If you are running your tests on multi-core hardware, running your tests in parallel is probably the best optimization you can make if you aren’t doing it yet.</description>
+      <description>&lt;p&gt;Tests need to be fast. If tests are slow, our development process is affected and we end up spending a considerable amount of time waiting for the results.&lt;/p&gt;
+&lt;p&gt;I will go through some of the techniques that I’ve applied to speed up tests on Django applications.&lt;/p&gt;
+&lt;h2 id=&#34;tips-for-speeding-up-test-execution&#34;&gt;Tips for speeding up test execution&lt;/h2&gt;
+&lt;h4 id=&#34;1-run-your-tests-in-parallel&#34;&gt;1. Run your tests in parallel&lt;/h4&gt;
+&lt;p&gt;If you are running your tests on multi-core hardware, running your tests in parallel is probably the best optimization you can make if you aren’t doing it yet.&lt;/p&gt;
+&lt;p&gt;If you are using pytest, install the &lt;a href=&#34;https://docs.pytest.org/en/3.0.1/xdist.html&#34;&gt;pytest-xdist&lt;/a&gt; plugin:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ pip install pytest-xdist
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;And then run your tests with the &lt;code&gt;-n&lt;/code&gt; parameter:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ pytest -n auto
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The &lt;code&gt;-n&lt;/code&gt; parameter accepts either a number, indicating the number of cores in which you would like to run the tests, or the value &lt;code&gt;auto&lt;/code&gt; in which case the plugin will automatically detect the number of cores that are available on your machine and use them all.&lt;/p&gt;
+&lt;p&gt;If you are using the Django test runner, simply run the tests using the &lt;code&gt;--parallel&lt;/code&gt; parameter:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ ./manage.py test --parallel
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;You can also indicate the specific number of cores in which you would like your tests to run by providing a number:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ ./manage.py test --parallel &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;2-use-fixtures-for-modularized-setup-pytest-only&#34;&gt;2. Use fixtures for modularized setup (Pytest only)&lt;/h4&gt;
+&lt;p&gt;In the typical xUnit based testing frameworks (such as &lt;a href=&#34;https://docs.python.org/3/library/unittest.html&#34;&gt;unittest&lt;/a&gt;) you create a setup method within your test class in which you set up everything you need for your tests.&lt;/p&gt;
+&lt;p&gt;Pytest fixtures are a replacement for the conventional setup method. To declare a fixture, you create a function and decorate it with the &lt;code&gt;@pytest.fixture&lt;/code&gt; decorator.&lt;/p&gt;
+&lt;p&gt;To use a fixture on a test case you can:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Make it run automatically for each test case with the &lt;code&gt;autouse&lt;/code&gt; parameter: &lt;code&gt;@pytest.fixture(autouse=True)&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Add it to your test case parameter list. This will trigger the fixture to be executed.&lt;/li&gt;
+&lt;li&gt;Add the &lt;code&gt;usefixtures&lt;/code&gt; mark decorator to your test class: &lt;code&gt;@pytest.mark.usefixtures(&amp;quot;your_fixture&amp;quot;)&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;One of the greatest advantages of using fixtures is that you can modularize your setup into smaller and less generic functions.&lt;/p&gt;
+&lt;p&gt;By splitting your setup method into multiple methods, you will be able to select only the ones you need for each test case. This will ensure that you execute exactly what is needed for each test case and nothing else.&lt;/p&gt;
+&lt;h4 id=&#34;3-use-the-database-only-when-it-is-needed&#34;&gt;3. Use the database only when it is needed&lt;/h4&gt;
+&lt;p&gt;It is common to see lots of database records being created on the setup method of a test class. Usually, not all the records are used by all the test cases, but they still get created each time.&lt;/p&gt;
+&lt;p&gt;Make sure you &lt;strong&gt;only&lt;/strong&gt; create the records that will be used by all the tests on your setup method. If there is a database record that is not being used by all the test cases, either:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Move it to a fixture (if you are using pytest)&lt;/li&gt;
+&lt;li&gt;Move it to the specific test where you need it&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;4-search-for-the-slowest-tests-and-look-for-possible-optimizations-pytest-only&#34;&gt;4. Search for the slowest tests and look for possible optimizations (Pytest only)&lt;/h4&gt;
+&lt;p&gt;Pytest provides a way to find which are the slowest tests by executing them using the &lt;code&gt;--durations&lt;/code&gt; parameter.&lt;/p&gt;
+&lt;p&gt;The following example command will execute all the tests and print a summary at the end with a list of the 5 tests that took the longest to run:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ pytest --durations&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;5-squash-your-migrations&#34;&gt;5. Squash your migrations&lt;/h4&gt;
+&lt;p&gt;Consider squashing your migrations if you have too many. Squashing refers to reducing the number of migrations you have by merging them into one.&lt;/p&gt;
+&lt;p&gt;Migrations are run each time you execute your test suite. &lt;a href=&#34;https://docs.djangoproject.com/en/3.0/topics/migrations/#migration-squashing&#34;&gt;Squashing migrations&lt;/a&gt; would not only speed up your tests but also your development setup.&lt;/p&gt;
+&lt;h2 id=&#34;tips-for-speeding-up-your-tests-execution-locally&#34;&gt;Tips for speeding up your tests execution locally&lt;/h2&gt;
+&lt;p&gt;When running tests &lt;strong&gt;locally&lt;/strong&gt; while developing a new feature, fixing a bug or refactoring, there are few more things you can do to speed up your tests:&lt;/p&gt;
+&lt;h4 id=&#34;1-re-use-the-database-among-test-runs&#34;&gt;1. Re-use the database among test runs&lt;/h4&gt;
+&lt;p&gt;Every time you run your Django tests, a new test database is created, this takes a considerable amount of time. When you are not making changes to your models or migration files, you can skip this step by telling the runner that you want to preserve the database among test executions.&lt;/p&gt;
+&lt;p&gt;If you are using Pytest, you can use &lt;a href=&#34;https://pytest-django.readthedocs.io/en/latest/&#34;&gt;pytest-django’s&lt;/a&gt;  &lt;code&gt;--reuse-db&lt;/code&gt;  parameter:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ pytest --reuse-db
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;If you are using the Django test runner you can accomplish the same with the &lt;code&gt;--keep-db&lt;/code&gt; parameter:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ ./manage.py test --keep-db
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;2-disable-migrations-with-no-migrations&#34;&gt;2. Disable Migrations with —no-migrations&lt;/h4&gt;
+&lt;p&gt;When the test runner starts, the database is created and migrations run one by one to reach the current state of your models. If you choose to run your tests without executing the migrations, Django will create the database using the current state of your models.&lt;/p&gt;
+&lt;p&gt;Skipping migrations should be safe unless you are making changes to your migrations, in which case you would also want to ensure they are working as expected.&lt;/p&gt;
+&lt;p&gt;Depending on the number of migrations you have, they could take a lot of time. But most of the time, while testing locally, we don’t need them to run.&lt;/p&gt;
+&lt;p&gt;To disable migrations, include the &lt;code&gt;--no-migrations&lt;/code&gt; parameter:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ pytest --no-migrations
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Or with the Django test runner:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ ./manage.py test --no-migrations
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;3-run-only-the-tests-that-failed-on-the-last-run-pytest-only&#34;&gt;3. Run only the tests that failed on the last run (Pytest only)&lt;/h4&gt;
+&lt;p&gt;If you just need to know if the tests that were previously failing are still failing, use pytest’s &lt;code&gt;--lf&lt;/code&gt; parameter:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ pytest --lf
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;wrapping-up&#34;&gt;Wrapping up&lt;/h2&gt;
+&lt;p&gt;Ensuring tests run fast is key to having a healthy project. Applying these techniques should help you take your first steps into faster and more efficient tests with Django.&lt;/p&gt;
+&lt;p&gt;If your application is big enough you might want to consider applying the &lt;a href=&#34;https://www.cosmicpython.com/book/chapter_02_repository.html&#34;&gt;Repository Pattern&lt;/a&gt; and making your tests completely independent of the database.&lt;/p&gt;
+</description>
     </item>
     
   </channel>
