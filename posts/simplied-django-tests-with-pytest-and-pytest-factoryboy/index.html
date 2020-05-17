@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Simplied Django Tests With Pytest and Pytest FactoryBoy :: roschegel — Rocio&#39;s blog about programming.</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="description" content="I&amp;rsquo;m always trying to find ways to make tests easier to read and extend. I hate working through a really hard feature and having to spend a big amount of time writing tests.
+Lately, I&amp;rsquo;ve been bothered by the amount of boilerplate on my test code. So, I decided to do some research and look for alternatives.
+When testing Django applications, I use a combination of Pytest fixtures and FactoryBoy to write tests that need database records." />
+<meta name="keywords" content="django tests, pytest-factoryboy, Pytest and Django" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="/posts/simplied-django-tests-with-pytest-and-pytest-factoryboy/" />
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-165430966-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+
+<link rel="stylesheet" href="/assets/style.css">
+
+  <link rel="stylesheet" href="/assets/blue.css">
+
+
+
+<link rel="stylesheet" href="/style.css">
+
+
+<script src="https://kit.fontawesome.com/e98078c911.js" crossorigin="anonymous"></script>
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="/img/favicon/blue.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+  <meta name="twitter:site" content="roschegel" />
+
+<meta name="twitter:creator" content="rocioar" />
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Simplied Django Tests With Pytest and Pytest FactoryBoy :: roschegel">
+<meta property="og:description" content="I&amp;rsquo;m always trying to find ways to make tests easier to read and extend. I hate working through a really hard feature and having to spend a big amount of time writing tests.
+Lately, I&amp;rsquo;ve been bothered by the amount of boilerplate on my test code. So, I decided to do some research and look for alternatives.
+When testing Django applications, I use a combination of Pytest fixtures and FactoryBoy to write tests that need database records." />
+<meta property="og:url" content="/posts/simplied-django-tests-with-pytest-and-pytest-factoryboy/" />
+<meta property="og:site_name" content="Simplied Django Tests With Pytest and Pytest FactoryBoy" />
+
+  
+    <meta property="og:image" content="/img/favicon/blue.png">
+  
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2020-05-17 00:00:00 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+<meta name="twitter:image" content="http://schegel.net/img/photo.jpg">
+
+
+</head>
+<body class="">
+
+
+<div class="container headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    roschegel
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/about">About</a></li>
+        
+      
+        
+          <li><a href="/">Posts</a></li>
+        
+      
+      
+    
+
+    
+    <div class="spacer"></div>
+
+    <div class="social-links">
+      
+        <a href="https://twitter.com/roschegel" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+      
+        <a href="https://github.com/rocioar" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+      
+        <a href="https://linkedin.com/in/roschegel" target="_blank">
+          <i class="fab fa-linkedin"></i>
+        </a>
+      
+    </div>
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+      
+        <li><a href="/">Posts</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="/posts/simplied-django-tests-with-pytest-and-pytest-factoryboy/">Simplied Django Tests With Pytest and Pytest FactoryBoy</a></h1>
+  <div class="post-meta">
+      
+    <span class="post-date">
+      2020-05-17
+    </span>
+    
+    
+    <span class="post-author">::
+      Rocio Aramberri
+    </span>
+    
+  </div>
+
+  
+  <span class="post-tags">
+    
+    #<a href="/tags/python/">python</a>&nbsp;
+    
+    #<a href="/tags/django/">django</a>&nbsp;
+    
+    #<a href="/tags/pytest/">pytest</a>&nbsp;
+    
+    #<a href="/tags/testing/">testing</a>&nbsp;
+    
+  </span>
+  
+
+  
+
+  <div class="post-content"><div>
+        <p>I&rsquo;m always trying to find ways to make tests easier to read and extend. I hate working through a really hard feature and having to spend a big amount of time writing tests.</p>
+<p>Lately, I&rsquo;ve been bothered by the amount of boilerplate on my test code. So, I decided to do some research and look for alternatives.</p>
+<p>When testing Django applications, I use a combination of <a href="https://docs.pytest.org/en/latest/">Pytest</a> fixtures and  <a href="https://factoryboy.readthedocs.io/">FactoryBoy</a> to write tests that need database records.</p>
+<ul>
+<li><strong>Pytest Fixtures</strong> allow you to abstract the initialization of your test cases into functions (fixtures) and help you re-use code. Pytest uses dependency injection to detect when a fixture is needed on a test by matching the name provided on the parameter with the name of the fixture. Learn more about Pytest Fixtures on the <a href="https://docs.pytest.org/en/latest/fixture.html">Pytest documentation</a>.</li>
+<li><strong>FactoryBoy</strong> allows you to create factories for your models with pre-defined values, which makes it easy to create model objects on the go. It handles relationships by allowing you to define subfactories and integrates with the <a href="https://faker.readthedocs.io/en/master/">faker</a> library to provide the ability to use randomized values. It&rsquo;s a good alternative to Django <a href="https://docs.djangoproject.com/en/3.0/howto/initial-data/#providing-data-with-fixtures">fixtures</a>.</li>
+</ul>
+<h2 id="the-problem">The Problem<a href="#the-problem" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Let&rsquo;s look through an example to understand what we are trying to fix.</p>
+<p>We will write a test case for the following function which returns a list of <code>Post</code>'s titles:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_posts_titles</span>(include_unpublished<span style="color:#f92672">=</span>False):
+    queryset <span style="color:#f92672">=</span> Post<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>all()
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> include_unpublished:
+        queryset <span style="color:#f92672">=</span> queryset<span style="color:#f92672">.</span>filter(status<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;published&#34;</span>)
+    <span style="color:#66d9ef">return</span>  list(queryset<span style="color:#f92672">.</span>values_list(<span style="color:#e6db74">&#34;title&#34;</span>, flat<span style="color:#f92672">=</span>True))
+</code></pre></div><p>First, in <code>factories.py</code> we define the factory that will later be used to create the model objects on the test. In this case, it&rsquo;s just a simple database with a <code>Post</code> model. So we just need one factory:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> factory
+
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">PostFactory</span>(factory<span style="color:#f92672">.</span>django<span style="color:#f92672">.</span>DjangoModelFactory):
+    title <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Combining Pytest and FactoryBoy for simplified tests in Django&#34;</span>
+    status <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;draft&#34;</span>
+
+    <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Meta</span>:
+        model <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;blog.Post&#34;</span>
+</code></pre></div><p>Then in the <code>test_posts.py</code> file, we import the factory and create 2 fixtures that use it, <code>post_draft</code> and <code>post_published</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> pytest
+
+<span style="color:#f92672">from</span> factories <span style="color:#f92672">import</span> PostFactory
+
+
+<span style="color:#a6e22e">@pytest.fixture</span>
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">post_draft</span>():
+    <span style="color:#66d9ef">return</span> PostFactory()
+
+
+<span style="color:#a6e22e">@pytest.fixture</span>
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">post_published</span>():
+    <span style="color:#66d9ef">return</span> PostFactory(status<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;published&#34;</span>)
+
+
+<span style="color:#a6e22e">@pytest.mark.django_db</span>
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">test_get_posts_titles</span>(post_published, post_draft):
+    <span style="color:#66d9ef">assert</span> get_posts_titles() <span style="color:#f92672">==</span> [post_published<span style="color:#f92672">.</span>title]
+    <span style="color:#66d9ef">assert</span> get_posts_titles(include_unpublished<span style="color:#f92672">=</span>True) <span style="color:#f92672">==</span> [post_published<span style="color:#f92672">.</span>title, post_draft<span style="color:#f92672">.</span>title]
+</code></pre></div><p>Notice the amount of boilerplate on the code, we had to:</p>
+<ul>
+<li>create a <code>PostFactory</code> on the <code>factories.py</code> file;</li>
+<li>create a fixture for a <code>draft</code> post;</li>
+<li>create a fixture for a <code>published</code> post.</li>
+</ul>
+<h2 id="avoiding-boilerplate-code-with-pytest-factoryboy">Avoiding boilerplate code with pytest-factoryboy<a href="#avoiding-boilerplate-code-with-pytest-factoryboy" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Let&rsquo;s see how we could re-write the code from the previous section using <a href="https://pytest-factoryboy.readthedocs.io/en/latest/">pytest-factoryboy</a>.</p>
+<p>We&rsquo;ll still have the factories defined in the <code>factories.py</code> file:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> factory
+
+
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">PostFactory</span>(factory<span style="color:#f92672">.</span>django<span style="color:#f92672">.</span>DjangoModelFactory):
+    title <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Combining Pytest and FactoryBoy for simplified tests in Django&#34;</span>
+    status <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;draft&#34;</span>
+
+    <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Meta</span>:
+        model <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;blog.Post&#34;</span>
+</code></pre></div><p>But now, we register that factory in <a href="https://docs.pytest.org/en/2.7.3/plugins.html?highlight=re">conftests.py</a> so that it is available as a fixture for all tests:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> pytest_factoryboy <span style="color:#f92672">import</span> register
+
+<span style="color:#f92672">from</span> factories <span style="color:#f92672">import</span> PostFactory
+
+
+register(PostFactory)
+register(PostFactory, <span style="color:#e6db74">&#34;draft_post&#34;</span>, title<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Draft post&#34;</span>, status<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;draft&#34;</span>)
+</code></pre></div><p>The fixture will take the name of the Factory (<code>post</code> by default) but you can optionally provide it a name. Two fixtures will be created: <code>post</code> and <code>draft_post</code>.</p>
+<p>Then, in the tests, we can start using the registered fixtures:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> pytest
+
+<span style="color:#f92672">from</span> blog.utils <span style="color:#f92672">import</span> get_posts_titles
+
+
+<span style="color:#a6e22e">@pytest.mark.django_db</span>
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">test_get_posts_titles</span>(post, draft_post):
+    <span style="color:#66d9ef">assert</span> get_posts_titles() <span style="color:#f92672">==</span> [post<span style="color:#f92672">.</span>title]
+    <span style="color:#66d9ef">assert</span> get_posts_titles(include_unpublished<span style="color:#f92672">=</span>True) <span style="color:#f92672">==</span> [post<span style="color:#f92672">.</span>title, draft_post<span style="color:#f92672">.</span>title]
+</code></pre></div><p>Since <code>pytest-factoryboy</code> took care of registering the factories as fixtures for us, we won&rsquo;t need to:</p>
+<ul>
+<li>manually create the fixtures;</li>
+<li>manually import the <code>PostFactory</code> on the test file.</li>
+</ul>
+<h2 id="more-about-pytest-factoryboy">More about pytest-factoryboy<a href="#more-about-pytest-factoryboy" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Being able to register a factory as a fixture is just one of <code>pytest-factoryboy</code>'s features. Let&rsquo;s see some more.</p>
+<h4 id="set-custom-attribute-values-for-you-model-fixtures">Set custom attribute values for you model fixtures<a href="#set-custom-attribute-values-for-you-model-fixtures" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<p>There will be some test cases in which you need to customize an attribute of your model fixture. You can easily do so using <code>pytest.mark.parametrize</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> pytest
+
+<span style="color:#f92672">from</span> blog.utils <span style="color:#f92672">import</span> get_posts_titles
+
+
+<span style="color:#a6e22e">@pytest.mark.django_db</span>
+<span style="color:#a6e22e">@pytest.mark.parametrize</span>(<span style="color:#e6db74">&#34;post__title&#34;</span>, [<span style="color:#e6db74">&#34;Custom title&#34;</span>])
+<span style="color:#a6e22e">@pytest.mark.parametrize</span>(<span style="color:#e6db74">&#34;post_draft__title&#34;</span>, [<span style="color:#e6db74">&#34;Custom title - Draft&#34;</span>])
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">test_get_posts_titles</span>(post, draft_post):
+    <span style="color:#66d9ef">assert</span> get_posts_titles() <span style="color:#f92672">==</span> [<span style="color:#e6db74">&#34;Custom title&#34;</span>]
+    <span style="color:#66d9ef">assert</span> get_posts_titles(include_unpublished<span style="color:#f92672">=</span>True) <span style="color:#f92672">==</span> [<span style="color:#e6db74">&#34;Custom title&#34;</span>, <span style="color:#e6db74">&#34;Custom title - Draft&#34;</span>]
+</code></pre></div><h4 id="override-a-fixtures-value">Override a fixture&rsquo;s value<a href="#override-a-fixtures-value" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<p>If you are modifying the same attribute on multiple test functions within a module, you can opt to override the attribute on the fixture for the entire module. The following code will set <code>post.status</code> to <code>&quot;draft&quot;</code> for the entire module:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> pytest
+
+<span style="color:#f92672">from</span> blog.utils <span style="color:#f92672">import</span> get_posts_titles
+
+
+<span style="color:#a6e22e">@pytest.fixture</span>
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">post__status</span>():
+    <span style="color:#e6db74">&#34;&#34;&#34;Override blog&#39;s status to draft.&#34;&#34;&#34;</span>
+    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;draft&#34;</span>
+
+
+<span style="color:#a6e22e">@pytest.mark.django_db</span>
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">test_get_posts_titles</span>(post):
+    <span style="color:#66d9ef">assert</span> get_posts_titles() <span style="color:#f92672">==</span> []
+    <span style="color:#66d9ef">assert</span> get_posts_titles(include_unpublished<span style="color:#f92672">=</span>True) <span style="color:#f92672">==</span> [post<span style="color:#f92672">.</span>title]
+</code></pre></div><h4 id="factories-are-automatically-registered-as-fixtures">Factories are automatically registered as fixtures<a href="#factories-are-automatically-registered-as-fixtures" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<p>Sometimes you will just want to interact with the factory directly, without using the model fixture (e.g. <code>post</code>). <code>pytest-factoryboy</code> automatically registers the factory as a fixture too. Notice that the fixture name is the snake_case version of the factory name:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> pytest
+
+<span style="color:#f92672">from</span> blog.utils <span style="color:#f92672">import</span> get_posts_titles
+
+
+<span style="color:#a6e22e">@pytest.mark.django_db</span>
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">test_get_posts_titles</span>(post_factory):
+    post <span style="color:#f92672">=</span> post_factory(status<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;draft&#34;</span>)
+    <span style="color:#66d9ef">assert</span> get_posts_titles() <span style="color:#f92672">==</span> []
+    <span style="color:#66d9ef">assert</span> get_posts_titles(include_unpublished<span style="color:#f92672">=</span>True) <span style="color:#f92672">==</span> [post<span style="color:#f92672">.</span>title]
+</code></pre></div><h4 id="assign-other-fixtures-as-values-with-parametrize">Assign other fixtures as values with parametrize<a href="#assign-other-fixtures-as-values-with-parametrize" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<p>When your models have <code>ForeignKey</code> relationships you might want to assign another fixture as the value. You can do so using <code>parametrize</code> and <code>LazyFixture</code>.</p>
+<p>Given a <code>Post</code> with a <code>blog</code> attribute as a <code>ForeignKey</code>, we could have the following factories:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> factory
+
+
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">BlogFactory</span>(factory<span style="color:#f92672">.</span>django<span style="color:#f92672">.</span>DjangoModelFactory):
+    name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;roschegel&#34;</span>
+
+    <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Meta</span>:
+        model <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;blog.Blog&#34;</span>
+
+
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">PostFactory</span>(factory<span style="color:#f92672">.</span>django<span style="color:#f92672">.</span>DjangoModelFactory):
+    title <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Combining Pytest and FactoryBoy for simplified tests in Django&#34;</span>
+    status <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;draft&#34;</span>
+    blog <span style="color:#f92672">=</span> factory<span style="color:#f92672">.</span>SubFactory(BlogFactory)
+
+    <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Meta</span>:
+        model <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;blog.Post&#34;</span>
+</code></pre></div><p>In our test case we could then override the blog attribute using <code>LazyFixture</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> pytest
+
+<span style="color:#f92672">from</span> pytest_factoryboy <span style="color:#f92672">import</span> LazyFixture
+
+
+<span style="color:#a6e22e">@pytest.fixture</span>
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">blog_2</span>(blog_factory):
+    <span style="color:#66d9ef">return</span> blog_factory(name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;some_other_blog&#34;</span>)
+
+
+<span style="color:#a6e22e">@pytest.mark.django_db</span>
+<span style="color:#a6e22e">@pytest.mark.parametrize</span>(<span style="color:#e6db74">&#34;post__blog&#34;</span>, [LazyFixture(<span style="color:#e6db74">&#34;blog_2&#34;</span>)])
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">test_lazy_fixture</span>(post, blog_2):
+    <span style="color:#66d9ef">assert</span> post<span style="color:#f92672">.</span>blog<span style="color:#f92672">.</span>id <span style="color:#f92672">==</span> blog_2<span style="color:#f92672">.</span>id
+</code></pre></div><h2 id="wrapping-up">Wrapping up<a href="#wrapping-up" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Next time you find yourself writing factories and fixtures that just return instances of your models, consider using <code>pytest-factoryboy</code>. It will save you a considerable amount of boilerplate code. And that means more time to work on meaningfull stuff, which is always welcome.</p>
+
+      </div></div>
+
+  
+  
+<div class="pagination">
+    <div class="pagination__title">
+        <span class="pagination__title-h">Read other posts</span>
+        <hr />
+    </div>
+    <div class="pagination__buttons">
+        
+        
+        <span class="button next">
+            <a href="/posts/making-your-django-tests-faster/">
+                <span class="button__text">Making your Django tests faster</span>
+                <span class="button__icon">→</span>
+            </a>
+        </span>
+        
+    </div>
+</div>
+
+  
+
+  
+
+  <div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "roschegel" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright copyright--user">
+        <span>By Rocio Aramberri</span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="/assets/main.js"></script>
+<script src="/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

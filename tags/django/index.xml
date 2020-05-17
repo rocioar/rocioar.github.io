@@ -7,10 +7,21 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>By Rocio Aramberri</copyright>
-    <lastBuildDate>Sat, 09 May 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 17 May 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/django/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Simplied Django Tests With Pytest and Pytest FactoryBoy</title>
+      <link>/posts/simplied-django-tests-with-pytest-and-pytest-factoryboy/</link>
+      <pubDate>Sun, 17 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/simplied-django-tests-with-pytest-and-pytest-factoryboy/</guid>
+      <description>I&amp;rsquo;m always trying to find ways to make tests easier to read and extend. I hate working through a really hard feature and having to spend a big amount of time writing tests.
+Lately, I&amp;rsquo;ve been bothered by the amount of boilerplate on my test code. So, I decided to do some research and look for alternatives.
+When testing Django applications, I use a combination of Pytest fixtures and FactoryBoy to write tests that need database records.</description>
+    </item>
     
     <item>
       <title>Making your Django tests faster</title>
