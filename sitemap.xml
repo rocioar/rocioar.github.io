@@ -3,12 +3,32 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>/tags/django/</loc>
-    <lastmod>2020-05-17T00:00:00+00:00</lastmod>
+    <loc>/posts/gradually-formatting-your-codebase-with-black/</loc>
+    <lastmod>2020-05-25T10:41:49-03:00</lastmod>
   </url>
   
   <url>
     <loc>/posts/</loc>
+    <lastmod>2020-05-25T10:41:49-03:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/python/</loc>
+    <lastmod>2020-05-25T10:41:49-03:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/</loc>
+    <lastmod>2020-05-25T10:41:49-03:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/</loc>
+    <lastmod>2020-05-25T10:41:49-03:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/django/</loc>
     <lastmod>2020-05-17T00:00:00+00:00</lastmod>
   </url>
   
@@ -18,22 +38,7 @@
   </url>
   
   <url>
-    <loc>/tags/python/</loc>
-    <lastmod>2020-05-17T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/</loc>
-    <lastmod>2020-05-17T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
     <loc>/posts/simplied-django-tests-with-pytest-and-pytest-factoryboy/</loc>
-    <lastmod>2020-05-17T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/tags/</loc>
     <lastmod>2020-05-17T00:00:00+00:00</lastmod>
   </url>
   

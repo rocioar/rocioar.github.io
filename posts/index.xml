@@ -7,13 +7,97 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>By Rocio Aramberri</copyright>
-    <lastBuildDate>Sun, 17 May 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 25 May 2020 10:41:49 -0300</lastBuildDate>
     
 	<atom:link href="/posts/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
-      <title>Simplified Django Tests With Pytest and Pytest FactoryBoy</title>
+      <title>Gradually formatting your codebase with black</title>
+      <link>/posts/gradually-formatting-your-codebase-with-black/</link>
+      <pubDate>Mon, 25 May 2020 10:41:49 -0300</pubDate>
+      
+      <guid>/posts/gradually-formatting-your-codebase-with-black/</guid>
+      <description>&lt;p&gt;I&amp;rsquo;ve just created my first Github Action: &lt;a href=&#34;https://github.com/rocioar/gradual-black-formatter&#34;&gt;https://github.com/rocioar/gradual-black-formatter&lt;/a&gt;. It&amp;rsquo;s called &amp;ldquo;Gradual Black Formatter&amp;rdquo;, and it allows you to gradually format your code using &lt;a href=&#34;https://github.com/psf/black&#34;&gt;black&lt;/a&gt; via Github Actions.&lt;/p&gt;
+&lt;p&gt;If your codebase is small and well tested, this Github Action would be of no use to you, as you could just format your code on a single PR. On the other hand, if you have a big enough codebase in which making a big PR with lots of formatting changes is a risk. Then look no further.&lt;/p&gt;
+&lt;h2 id=&#34;how-does-it-work&#34;&gt;How does it work?&lt;/h2&gt;
+&lt;p&gt;The Github Action just does one thing: runs black on the &lt;strong&gt;x&lt;/strong&gt; least recently modified files.&lt;/p&gt;
+&lt;p&gt;Example action that runs black on the 10 least recently modified files:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;- &lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: Apply Black Gradually
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;uses&lt;/span&gt;: rocioar/gradual-black-formatter@v1
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;with&lt;/span&gt;:
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;number_of_files&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;ignore_files_regex&lt;/span&gt;: &lt;span style=&#34;color:#75715e&#34;&gt;*test*,*migrations*&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As you can see on the example above, it accepts two parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;number_of_files&lt;/code&gt; to indicate how many files you want &lt;code&gt;black&lt;/code&gt; to format each time.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ignore_files_regex&lt;/code&gt; to indicate the files you want to ignore, if any. You might want to exclude tests since they are low-risk and you could make a single PR to format all tests at once.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;how-can-i-use-it-on-my-project&#34;&gt;How can I use it on my project?&lt;/h2&gt;
+&lt;p&gt;To use it, you can combine it with a few other actions to accomplish the following workflow:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Checkout the code&lt;/li&gt;
+&lt;li&gt;Apply Black to &lt;strong&gt;x&lt;/strong&gt; files&lt;/li&gt;
+&lt;li&gt;Commit the code to a branch&lt;/li&gt;
+&lt;li&gt;Send a PR&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Here is an example workflow that uses &lt;a href=&#34;https://github.com/actions/checkout&#34;&gt;actions/checkout@v2&lt;/a&gt; to checkout the code and &lt;a href=&#34;https://github.com/peter-evans/create-pull-request&#34;&gt;peter-evans/create-pull-request@v2&lt;/a&gt; to make a commit and create a PR:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: Apply Black Gradually
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;on&lt;/span&gt;:
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;pull_request&lt;/span&gt;:
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;types&lt;/span&gt;: [closed]
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;jobs&lt;/span&gt;:
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;apply-black&lt;/span&gt;:
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;: github.head_ref == &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;black&amp;#39;&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;runs-on&lt;/span&gt;: ubuntu-latest
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;steps&lt;/span&gt;:
+      - &lt;span style=&#34;color:#66d9ef&#34;&gt;uses&lt;/span&gt;: actions/checkout@v2
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;with&lt;/span&gt;:
+          &lt;span style=&#34;color:#66d9ef&#34;&gt;ref&lt;/span&gt;: master
+          &lt;span style=&#34;color:#66d9ef&#34;&gt;fetch-depth&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+      - &lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: Apply Black Gradually
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;id&lt;/span&gt;: black
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;uses&lt;/span&gt;: rocioar/gradual-black-formatter@v1
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;with&lt;/span&gt;:
+          &lt;span style=&#34;color:#66d9ef&#34;&gt;number_of_files&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;
+          &lt;span style=&#34;color:#66d9ef&#34;&gt;ignore_files_regex&lt;/span&gt;: &lt;span style=&#34;color:#75715e&#34;&gt;*test*,*migrations*&lt;/span&gt;
+      - &lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: Create Pull Request
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;uses&lt;/span&gt;: peter-evans/create-pull-request@v2
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;with&lt;/span&gt;:
+          &lt;span style=&#34;color:#66d9ef&#34;&gt;token&lt;/span&gt;: ${{ secrets.GITHUB_TOKEN }}
+          &lt;span style=&#34;color:#66d9ef&#34;&gt;commit-message&lt;/span&gt;: Apply black to ${{ steps.black.outputs.number_of_modified_files }} files
+          &lt;span style=&#34;color:#66d9ef&#34;&gt;committer&lt;/span&gt;: GitHub &amp;lt;noreply@github.com&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;          author: ${{ github.actor }} &amp;lt;${{ github.actor }}@users.noreply.github.com&amp;gt;&lt;/span&gt;
+          &lt;span style=&#34;color:#66d9ef&#34;&gt;title&lt;/span&gt;: Apply black to ${{ steps.black.outputs.number_of_modified_files }} files
+          &lt;span style=&#34;color:#66d9ef&#34;&gt;body&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Auto-generated PR that applies black to: ${{ steps.black.outputs.modified_file_names }}.&amp;#34;&lt;/span&gt;
+          &lt;span style=&#34;color:#66d9ef&#34;&gt;branch&lt;/span&gt;: black
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;Important Note&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;If you want the files to be formatted in order starting from the least recently modified files, make sure you pass &lt;code&gt;fetch-depth: 0&lt;/code&gt; to the checkout action so that all the revision history is retrieved.&lt;/p&gt;
+&lt;h3 id=&#34;when-will-the-action-be-executed&#34;&gt;When will the action be executed?&lt;/h3&gt;
+&lt;p&gt;As configured on the example above the action will be executed every time a PR to the &lt;code&gt;black&lt;/code&gt; branch is closed.&lt;/p&gt;
+&lt;p&gt;To start it off, you can make a PR with the workflow to the &lt;code&gt;black&lt;/code&gt; branch, once you merge it, the process will start:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;The action will create a PR with the formatted files.&lt;/li&gt;
+&lt;li&gt;You will review the PR and merge it.&lt;/li&gt;
+&lt;li&gt;It will go back to step 1 until all files have been formatted.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;On the following image you can see an example of a PR that was created by the action:
+
+  &lt;figure class=&#34;center&#34; &gt;
+    &lt;img src=&#34;/img/example_pr.png&#34;   style=&#34;border-radius: 8px;&#34;  /&gt;
+    
+  &lt;/figure&gt;
+
+&lt;/p&gt;
+&lt;h2 id=&#34;wrapping-up&#34;&gt;Wrapping up&lt;/h2&gt;
+&lt;p&gt;Formatting your code with &lt;code&gt;black&lt;/code&gt; will make your codebase more consistent, and will avoid many de-rails during code reviews. This Github Action will help you format your code with the least disruption.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Simplied Django Tests With Pytest and Pytest FactoryBoy</title>
       <link>/posts/simplied-django-tests-with-pytest-and-pytest-factoryboy/</link>
       <pubDate>Sun, 17 May 2020 00:00:00 +0000</pubDate>
       

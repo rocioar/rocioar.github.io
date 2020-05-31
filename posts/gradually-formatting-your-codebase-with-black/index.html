@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Gradually formatting your codebase with black :: roschegel — Rocio&#39;s blog about programming.</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="description" content="I&amp;rsquo;ve just created my first Github Action: https://github.com/rocioar/gradual-black-formatter. It&amp;rsquo;s called &amp;ldquo;Gradual Black Formatter&amp;rdquo;, and it allows you to gradually format your code using black via Github Actions.
+If your codebase is small and well tested, this Github Action would be of no use to you, as you could just format your code on a single PR. On the other hand, if you have a big enough codebase in which making a big PR with lots of formatting changes is a risk." />
+<meta name="keywords" content="black, black action, gradual black, incremental black, python formatter, python black" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="/posts/gradually-formatting-your-codebase-with-black/" />
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-165430966-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+
+<link rel="stylesheet" href="/assets/style.css">
+
+  <link rel="stylesheet" href="/assets/blue.css">
+
+
+
+<link rel="stylesheet" href="/style.css">
+
+
+<script src="https://kit.fontawesome.com/e98078c911.js" crossorigin="anonymous"></script>
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="/img/favicon/blue.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+  <meta name="twitter:site" content="roschegel" />
+
+<meta name="twitter:creator" content="Rocio Aramberri" />
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Gradually formatting your codebase with black :: roschegel">
+<meta property="og:description" content="I&amp;rsquo;ve just created my first Github Action: https://github.com/rocioar/gradual-black-formatter. It&amp;rsquo;s called &amp;ldquo;Gradual Black Formatter&amp;rdquo;, and it allows you to gradually format your code using black via Github Actions.
+If your codebase is small and well tested, this Github Action would be of no use to you, as you could just format your code on a single PR. On the other hand, if you have a big enough codebase in which making a big PR with lots of formatting changes is a risk." />
+<meta property="og:url" content="/posts/gradually-formatting-your-codebase-with-black/" />
+<meta property="og:site_name" content="Gradually formatting your codebase with black" />
+
+  
+    <meta property="og:image" content="/img/favicon/blue.png">
+  
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2020-05-25 10:41:49 -0300 -03" />
+
+
+
+
+
+
+
+
+
+<meta name="twitter:image" content="http://schegel.net/img/photo.jpg">
+
+
+</head>
+<body class="">
+
+
+<div class="container headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    roschegel
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/about">About</a></li>
+        
+      
+        
+          <li><a href="/">Posts</a></li>
+        
+      
+      
+    
+
+    
+    <div class="spacer"></div>
+
+    <div class="social-links">
+      
+        <a href="https://twitter.com/roschegel" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+      
+        <a href="https://github.com/rocioar" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+      
+        <a href="https://linkedin.com/in/roschegel" target="_blank">
+          <i class="fab fa-linkedin"></i>
+        </a>
+      
+      
+    </div>
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+      
+        <li><a href="/">Posts</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="/posts/gradually-formatting-your-codebase-with-black/">Gradually formatting your codebase with black</a></h1>
+  <div class="post-meta">
+      
+    <span class="post-date">
+      2020-05-25
+    </span>
+    
+    
+    <span class="post-author">::
+      Rocio Aramberri
+    </span>
+    
+  </div>
+
+  
+  <span class="post-tags">
+    
+    #<a href="/tags/python/">python</a>&nbsp;
+    
+  </span>
+  
+
+  
+
+  <div class="post-content"><div>
+        <p>I&rsquo;ve just created my first Github Action: <a href="https://github.com/rocioar/gradual-black-formatter">https://github.com/rocioar/gradual-black-formatter</a>. It&rsquo;s called &ldquo;Gradual Black Formatter&rdquo;, and it allows you to gradually format your code using <a href="https://github.com/psf/black">black</a> via Github Actions.</p>
+<p>If your codebase is small and well tested, this Github Action would be of no use to you, as you could just format your code on a single PR. On the other hand, if you have a big enough codebase in which making a big PR with lots of formatting changes is a risk. Then look no further.</p>
+<h2 id="how-does-it-work">How does it work?<a href="#how-does-it-work" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>The Github Action just does one thing: runs black on the <strong>x</strong> least recently modified files.</p>
+<p>Example action that runs black on the 10 least recently modified files:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">- <span style="color:#66d9ef">name</span>: Apply Black Gradually
+  <span style="color:#66d9ef">uses</span>: rocioar/gradual-black-formatter@v1
+  <span style="color:#66d9ef">with</span>:
+    <span style="color:#66d9ef">number_of_files</span>: <span style="color:#ae81ff">10</span>
+    <span style="color:#66d9ef">ignore_files_regex</span>: <span style="color:#75715e">*test*,*migrations*</span>
+</code></pre></div><p>As you can see on the example above, it accepts two parameters:</p>
+<ul>
+<li><code>number_of_files</code> to indicate how many files you want <code>black</code> to format each time.</li>
+<li><code>ignore_files_regex</code> to indicate the files you want to ignore, if any. You might want to exclude tests since they are low-risk and you could make a single PR to format all tests at once.</li>
+</ul>
+<h2 id="how-can-i-use-it-on-my-project">How can I use it on my project?<a href="#how-can-i-use-it-on-my-project" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>To use it, you can combine it with a few other actions to accomplish the following workflow:</p>
+<ol>
+<li>Checkout the code</li>
+<li>Apply Black to <strong>x</strong> files</li>
+<li>Commit the code to a branch</li>
+<li>Send a PR</li>
+</ol>
+<p>Here is an example workflow that uses <a href="https://github.com/actions/checkout">actions/checkout@v2</a> to checkout the code and <a href="https://github.com/peter-evans/create-pull-request">peter-evans/create-pull-request@v2</a> to make a commit and create a PR:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">name</span>: Apply Black Gradually
+
+<span style="color:#66d9ef">on</span>:
+  <span style="color:#66d9ef">pull_request</span>:
+    <span style="color:#66d9ef">types</span>: [closed]
+
+<span style="color:#66d9ef">jobs</span>:
+  <span style="color:#66d9ef">apply-black</span>:
+    <span style="color:#66d9ef">if</span>: github.head_ref == <span style="color:#e6db74">&#39;black&#39;</span>
+    <span style="color:#66d9ef">runs-on</span>: ubuntu-latest
+    <span style="color:#66d9ef">steps</span>:
+      - <span style="color:#66d9ef">uses</span>: actions/checkout@v2
+        <span style="color:#66d9ef">with</span>:
+          <span style="color:#66d9ef">ref</span>: master
+          <span style="color:#66d9ef">fetch-depth</span>: <span style="color:#ae81ff">0</span>
+      - <span style="color:#66d9ef">name</span>: Apply Black Gradually
+        <span style="color:#66d9ef">id</span>: black
+        <span style="color:#66d9ef">uses</span>: rocioar/gradual-black-formatter@v1
+        <span style="color:#66d9ef">with</span>:
+          <span style="color:#66d9ef">number_of_files</span>: <span style="color:#ae81ff">3</span>
+          <span style="color:#66d9ef">ignore_files_regex</span>: <span style="color:#75715e">*test*,*migrations*</span>
+      - <span style="color:#66d9ef">name</span>: Create Pull Request
+        <span style="color:#66d9ef">uses</span>: peter-evans/create-pull-request@v2
+        <span style="color:#66d9ef">with</span>:
+          <span style="color:#66d9ef">token</span>: ${{ secrets.GITHUB_TOKEN }}
+          <span style="color:#66d9ef">commit-message</span>: Apply black to ${{ steps.black.outputs.number_of_modified_files }} files
+          <span style="color:#66d9ef">committer</span>: GitHub &lt;noreply@github.com<span style="color:#e6db74">&gt;
+</span><span style="color:#e6db74">          author: ${{ github.actor }} &lt;${{ github.actor }}@users.noreply.github.com&gt;</span>
+          <span style="color:#66d9ef">title</span>: Apply black to ${{ steps.black.outputs.number_of_modified_files }} files
+          <span style="color:#66d9ef">body</span>: <span style="color:#e6db74">&#34;Auto-generated PR that applies black to: ${{ steps.black.outputs.modified_file_names }}.&#34;</span>
+          <span style="color:#66d9ef">branch</span>: black
+</code></pre></div><p><strong>Important Note</strong></p>
+<p>If you want the files to be formatted in order starting from the least recently modified files, make sure you pass <code>fetch-depth: 0</code> to the checkout action so that all the revision history is retrieved.</p>
+<h3 id="when-will-the-action-be-executed">When will the action be executed?<a href="#when-will-the-action-be-executed" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>As configured on the example above the action will be executed every time a PR to the <code>black</code> branch is closed.</p>
+<p>To start it off, you can make a PR with the workflow to the <code>black</code> branch, once you merge it, the process will start:</p>
+<ol>
+<li>The action will create a PR with the formatted files.</li>
+<li>You will review the PR and merge it.</li>
+<li>It will go back to step 1 until all files have been formatted.</li>
+</ol>
+<p>On the following image you can see an example of a PR that was created by the action:
+
+  <figure class="center" >
+    <img src="/img/example_pr.png"   style="border-radius: 8px;"  />
+    
+  </figure>
+
+</p>
+<h2 id="wrapping-up">Wrapping up<a href="#wrapping-up" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Formatting your code with <code>black</code> will make your codebase more consistent, and will avoid many de-rails during code reviews. This Github Action will help you format your code with the least disruption.</p>
+
+      </div></div>
+
+  
+  
+<div class="pagination">
+    <div class="pagination__title">
+        <span class="pagination__title-h">Read other posts</span>
+        <hr />
+    </div>
+    <div class="pagination__buttons">
+        
+        
+        <span class="button next">
+            <a href="/posts/simplied-django-tests-with-pytest-and-pytest-factoryboy/">
+                <span class="button__text">Simplied Django Tests With Pytest and Pytest FactoryBoy</span>
+                <span class="button__icon">→</span>
+            </a>
+        </span>
+        
+    </div>
+</div>
+
+  
+
+  
+
+  <div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "roschegel" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright copyright--user">
+        <span>By Rocio Aramberri</span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="/assets/main.js"></script>
+<script src="/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>
