@@ -92,7 +92,7 @@
 
 &lt;/p&gt;
 &lt;h2 id=&#34;wrapping-up&#34;&gt;Wrapping up&lt;/h2&gt;
-&lt;p&gt;Formatting your code with &lt;code&gt;black&lt;/code&gt; will make your codebase more consistent, and will avoid many de-rails during code reviews. This Github Action will help you format your code with the least disruption.&lt;/p&gt;
+&lt;p&gt;Formatting your code with &lt;code&gt;black&lt;/code&gt; will make your codebase more consistent, and help you avoid many de-rails during code reviews. This Github Action will help you format your code with the least disruption.&lt;/p&gt;
 </description>
     </item>
     
