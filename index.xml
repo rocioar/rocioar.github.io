@@ -7,15 +7,15 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>By Rocio Aramberri</copyright>
-    <lastBuildDate>Sun, 14 Jun 2020 10:44:49 -0300</lastBuildDate>
+    <lastBuildDate>Sun, 14 Jun 2020 14:44:49 -0300</lastBuildDate>
     
-	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+      <atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>The case of the missing key in Python dicts</title>
       <link>/posts/the-case-of-the-missing-key-in-python-dicts/</link>
-      <pubDate>Sun, 14 Jun 2020 10:44:49 -0300</pubDate>
+      <pubDate>Sun, 14 Jun 2020 14:44:49 -0300</pubDate>
       
       <guid>/posts/the-case-of-the-missing-key-in-python-dicts/</guid>
       <description>&lt;p&gt;Let&amp;rsquo;s say you have a dictionary and you want to append values to a key that doesn&amp;rsquo;t exist yet. Consider this dictionary:&lt;/p&gt;
@@ -832,39 +832,6 @@ Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.000089&lt;/span&gt;s
 &lt;h2 id=&#34;wrapping-up&#34;&gt;Wrapping up&lt;/h2&gt;
 &lt;p&gt;While working with the Django ORM, it is extremely important that we think about what’s happening under the hood.&lt;/p&gt;
 &lt;p&gt;The concepts that you learned on this blog post will help you write more optimized queries and be in the lookout for possible optimizations while reviewing code. Beware though, that you should always measure the time a query is taking before and after the optimization to ensure that the optimization worked. Sometimes less queries doesn&amp;rsquo;t necessairly mean less time, JOINs could be expensive too.&lt;/p&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>About</title>
-      <link>/about/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/about/</guid>
-      <description>
-  &lt;figure class=&#34;center&#34; &gt;
-    &lt;img src=&#34;/img/photo.jpg&#34;   style=&#34;border-radius: 8px; width:219px; height:291px;&#34;  /&gt;
-    
-  &lt;/figure&gt;
-
-
-&lt;p&gt;I&amp;rsquo;m Rocio Aramberri. I live in Brazil, but I&amp;rsquo;m originally from Uruguay.&lt;/p&gt;
-&lt;p&gt;I work remotely as a Lead Engineer at &lt;a href=&#34;https://britecore.com&#34;&gt;BriteCore&lt;/a&gt;. I&amp;rsquo;m a constant learner with a passion for Software Design. My main areas of expertise are Django, VueJS, and AWS.&lt;/p&gt;
-&lt;p&gt;I enjoy writing about Python, Django, and testing.&lt;/p&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>Projects</title>
-      <link>/projects/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/projects/</guid>
-      <description>&lt;h2 id=&#34;flake8-djangohttpsgithubcomrocioarflake8-django&#34;&gt;&lt;a href=&#34;https://github.com/rocioar/flake8-django&#34;&gt;flake8-django&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;A flake8 plugin to automatically detect bad practices on Django projects.&lt;/p&gt;
-&lt;h2 id=&#34;gradual-black-formatterhttpsgithubcomrocioargradual-black-formatter&#34;&gt;&lt;a href=&#34;https://github.com/rocioar/gradual-black-formatter&#34;&gt;gradual-black-formatter&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;A Github Action that gradually applies the Python Black Formatter to your codebase.&lt;/p&gt;
-&lt;p&gt;It will apply black starting from the least recently changed files.&lt;/p&gt;
 </description>
     </item>
     

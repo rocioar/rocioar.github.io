@@ -7,15 +7,15 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>By Rocio Aramberri</copyright>
-    <lastBuildDate>Sun, 14 Jun 2020 10:44:49 -0300</lastBuildDate>
+    <lastBuildDate>Sun, 14 Jun 2020 14:44:49 -0300</lastBuildDate>
     
-	<atom:link href="/tags/python/index.xml" rel="self" type="application/rss+xml" />
+      <atom:link href="/tags/python/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>The case of the missing key in Python dicts</title>
       <link>/posts/the-case-of-the-missing-key-in-python-dicts/</link>
-      <pubDate>Sun, 14 Jun 2020 10:44:49 -0300</pubDate>
+      <pubDate>Sun, 14 Jun 2020 14:44:49 -0300</pubDate>
       
       <guid>/posts/the-case-of-the-missing-key-in-python-dicts/</guid>
       <description>&lt;p&gt;Let&amp;rsquo;s say you have a dictionary and you want to append values to a key that doesn&amp;rsquo;t exist yet. Consider this dictionary:&lt;/p&gt;
