@@ -747,17 +747,30 @@ Execution time: &lt;span style=&#34;color:#ae81ff&#34;&gt;0.000089&lt;/span&gt;s
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/about/</guid>
-      <description>&lt;h1 id=&#34;about&#34;&gt;About&lt;/h1&gt;
-
+      <description>
   &lt;figure class=&#34;center&#34; &gt;
     &lt;img src=&#34;/img/photo.jpg&#34;   style=&#34;border-radius: 8px; width:219px; height:291px;&#34;  /&gt;
     
   &lt;/figure&gt;
 
 
-&lt;p&gt;My name is Rocio Aramberri. I live in Brazil, but I&amp;rsquo;m originally from Uruguay.&lt;/p&gt;
-&lt;p&gt;I work remotely as a Lead Engineer at &lt;a href=&#34;https://britecore.com&#34;&gt;BriteCore&lt;/a&gt;. My main areas of expertise are Python, Django, Vue.js, and AWS.&lt;/p&gt;
-&lt;p&gt;Sharing knowledge and learning in the process are the main goals of this blog.&lt;/p&gt;
+&lt;p&gt;I&amp;rsquo;m Rocio Aramberri. I live in Brazil, but I&amp;rsquo;m originally from Uruguay.&lt;/p&gt;
+&lt;p&gt;I work remotely as a Lead Engineer at &lt;a href=&#34;https://britecore.com&#34;&gt;BriteCore&lt;/a&gt;. I&amp;rsquo;m a constant learner with a passion for Software Design. My main areas of expertise are Django, VueJS, and AWS.&lt;/p&gt;
+&lt;p&gt;I enjoy writing about Python, Django, and testing.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Projects</title>
+      <link>/projects/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/projects/</guid>
+      <description>&lt;h2 id=&#34;flake8-djangohttpsgithubcomrocioarflake8-django&#34;&gt;&lt;a href=&#34;https://github.com/rocioar/flake8-django&#34;&gt;flake8-django&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;A flake8 plugin to automatically detect bad practices on Django projects.&lt;/p&gt;
+&lt;h2 id=&#34;gradual-black-formatterhttpsgithubcomrocioargradual-black-formatter&#34;&gt;&lt;a href=&#34;https://github.com/rocioar/gradual-black-formatter&#34;&gt;gradual-black-formatter&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;A Github Action that gradually applies the Python Black Formatter to your codebase.&lt;/p&gt;
+&lt;p&gt;It will apply black starting from the least recently changed files.&lt;/p&gt;
 </description>
     </item>
     

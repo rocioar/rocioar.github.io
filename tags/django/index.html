@@ -109,6 +109,10 @@ if (!doNotTrack) {
           <li><a href="/">Posts</a></li>
         
       
+        
+          <li><a href="/projects">Projects</a></li>
+        
+      
       
     
 
@@ -147,6 +151,10 @@ if (!doNotTrack) {
     
       
         <li><a href="/">Posts</a></li>
+      
+    
+      
+        <li><a href="/projects">Projects</a></li>
       
     
     
@@ -197,11 +205,7 @@ if (!doNotTrack) {
 
     <div class="post-content">
       
-      
-      I’m always trying to find ways to make tests easier to read and extend. I hate working through a really hard feature and having to spend a big amount of time writing tests.
-Lately, I’ve been bothered by the amount of boilerplate on my test code. So, I decided to do some research and look for alternatives.
-When testing Django applications, I use a combination of Pytest fixtures and FactoryBoy to write tests that need database records.
-      
+      Lately, I&rsquo;ve been bothered by the amount of boilerplate on my Django application&rsquo;s test code. So, I decided to do some research and look for alternatives. On this blogpost I will take about pytest, factoryboy and how they can be combined.
       
     </div>
 
@@ -242,11 +246,7 @@ When testing Django applications, I use a combination of Pytest fixtures and Fac
 
     <div class="post-content">
       
-      
-      Tests need to be fast. If tests are slow, our development process is affected and we end up spending a considerable amount of time waiting for the results.
-I will go through some of the techniques that I’ve applied to speed up tests on Django applications.
-Tips for speeding up test execution 1. Run your tests in parallel If you are running your tests on multi-core hardware, running your tests in parallel is probably the best optimization you can make if you aren’t doing it yet.
-      
+      Tests need to be fast. If tests are slow, our development process is affected and we end up spending a considerable amount of time waiting for the results. On this blogpost I will go through some of the techniques that I’ve applied to speed up tests on Django applications.
       
     </div>
 
@@ -283,11 +283,7 @@ Tips for speeding up test execution 1. Run your tests in parallel If you are run
 
     <div class="post-content">
       
-      
-      The Django ORM (Object Relational Mapping) is one of the most powerful features of Django. It enables us to interact with the database using Python code instead of SQL.
-It has multiple advantages:
-The database engine is abstracted from us, so it is possible to switch to another database system with ease. It supports migrations: we can easily change our tables by updating our models and Django will automatically generate the migration scripts needed to update the database tables.
-      
+      The Django ORM (Object Relational Mapping) is one of the most powerful features of Django. It enables us to interact with the database using Python code instead of SQL. On this blogpost you will learn how to efficiently make queries using the ORM.
       
     </div>
 
