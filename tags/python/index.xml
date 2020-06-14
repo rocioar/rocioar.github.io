@@ -7,10 +7,104 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>By Rocio Aramberri</copyright>
-    <lastBuildDate>Mon, 25 May 2020 10:41:49 -0300</lastBuildDate>
+    <lastBuildDate>Sun, 14 Jun 2020 10:44:49 -0300</lastBuildDate>
     
 	<atom:link href="/tags/python/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>The case of the missing key in Python dicts</title>
+      <link>/posts/the-case-of-the-missing-key-in-python-dicts/</link>
+      <pubDate>Sun, 14 Jun 2020 10:44:49 -0300</pubDate>
+      
+      <guid>/posts/the-case-of-the-missing-key-in-python-dicts/</guid>
+      <description>&lt;p&gt;Let&amp;rsquo;s say you have a dictionary and you want to append values to a key that doesn&amp;rsquo;t exist yet. Consider this dictionary:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; books_by_author &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Luciano Ramalho&amp;#34;&lt;/span&gt;: [{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;title&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Fluent Python&amp;#34;&lt;/span&gt;}]
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Appending the value directly without initializing it would raise a &lt;code&gt;KeyError&lt;/code&gt; exception:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; books_by_author[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;David Beazley&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;append({&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;title&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Python Cookbook&amp;#34;&lt;/span&gt;})
+Traceback (most recent call last):
+  File &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;lt;stdin&amp;gt;&amp;#34;&lt;/span&gt;, line &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;module&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color:#a6e22e&#34;&gt;KeyError&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;David Beazley&amp;#39;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;There are a few different solutions that can be applied to this problem:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Look before you leap (LBYL)&lt;/li&gt;
+&lt;li&gt;Easier to ask for forgiveness than permission (EAFP)&lt;/li&gt;
+&lt;li&gt;Python tools: &lt;code&gt;setdefault&lt;/code&gt; or &lt;code&gt;defaultdict&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;look-before-you-leap&#34;&gt;Look before you leap&lt;/h2&gt;
+&lt;p&gt;One solution could be to use &lt;code&gt;in&lt;/code&gt; to find out if the key exists. If it doesn&amp;rsquo;t then initialize it, and finally append the value to it.&lt;/p&gt;
+&lt;p&gt;On the following example we are grouping all books by author. Notice how we first check if the author key is already in the dictionary, and if it is not we assign it to an empty list so that we can append the book to the list later:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;get_books_grouped_by_author&lt;/span&gt;(books):
+    books_by_author &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {}
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; book &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; books:
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; author &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; book[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;authors&amp;#34;&lt;/span&gt;]:
+            &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; author &lt;span style=&#34;color:#f92672&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; books_by_author:
+                books_by_author[author] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; []
+
+            books_by_author[author]&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;append(book)
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; books_by_author
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;easier-to-ask-for-permission-than-forgiveness&#34;&gt;Easier to ask for permission than forgiveness&lt;/h2&gt;
+&lt;p&gt;Another option would be to use a &lt;code&gt;try/except&lt;/code&gt; block, catch the &lt;code&gt;KeyError&lt;/code&gt; exception, and if the error is raised initialize the key with just one book:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;get_books_grouped_by_author&lt;/span&gt;(books):
+    books_by_author &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {}
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; book &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; books:
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; author &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; book[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;authors&amp;#34;&lt;/span&gt;]:
+            &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt;:
+                books_by_author[author]&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;append(book)
+            &lt;span style=&#34;color:#66d9ef&#34;&gt;except&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;KeyError&lt;/span&gt;:
+                books_by_author[author] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [book]
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; books_by_author
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Using a &lt;code&gt;try/except&lt;/code&gt; block will be the slowest approach for our specific example since the &lt;code&gt;KeyError&lt;/code&gt; exception will be raised frequently (once per author), and the most expensive part of a &lt;code&gt;try/except&lt;/code&gt; block is dealing with the exception itself. More on that on: &lt;a href=&#34;https://docs.python.org/3/faq/design.html?#how-fast-are-exceptions&#34;&gt;How fast are exceptions&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;using-setdefault&#34;&gt;Using setdefault&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;setdefault&lt;/code&gt;  allows you to specify a default value for a key. If the key doesn&amp;rsquo;t exist then that default value will be inserted and then returned. If the key already exists then the corresponding value will be returned.&lt;/p&gt;
+&lt;p&gt;As you can see using &lt;code&gt;setdefault&lt;/code&gt; simplifies our code a lot, we can now handle the missing key with just one line:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;get_books_grouped_by_author&lt;/span&gt;(books):
+    books_by_author &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {}
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; book &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; books:
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; author &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; book[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;authors&amp;#34;&lt;/span&gt;]:
+            books_by_author&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;setdefault(author, [])
+            books_by_author[author]&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;append(book)
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; books_by_author
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The one problem with this solution, though, is that the default value (in this case an empty list) will be created on every iteration, even if there is already a value for the given key. The overhead of creating a list on every iteration makes this solution slower for our use case.&lt;/p&gt;
+&lt;h2 id=&#34;using-defaultdict&#34;&gt;Using defaultdict&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;defaultdict&lt;/code&gt; is a subclass of &lt;code&gt;dict&lt;/code&gt; which accepts a &lt;code&gt;default_factory&lt;/code&gt; as a parameter and uses it whenever there is a missing key.&lt;/p&gt;
+&lt;p&gt;To use it, we can just update our example to initialize &lt;code&gt;books_by_author&lt;/code&gt; as a &lt;code&gt;defaultdict&lt;/code&gt; with &lt;code&gt;list&lt;/code&gt; as the &lt;code&gt;default_factory&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; collections &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; defaultdict
+
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;get_books_grouped_by_author&lt;/span&gt;(books):
+    books_by_author &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; defaultdict(list)
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; book &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; books:
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; author &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; book[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;authors&amp;#34;&lt;/span&gt;]:
+            books_by_author[author]&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;append(book)
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; dict(books_by_author)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;When using a &lt;code&gt;defaultdict&lt;/code&gt; it&amp;rsquo;s important to remember to cast the value back to a normal &lt;code&gt;dict&lt;/code&gt; before returning it. This is to prevent the unexpected behavior of a key being added to the dictionary if it is accessed through the square bracket notation later.&lt;/p&gt;
+&lt;p&gt;Notice how accessing the &lt;code&gt;inexistent key&lt;/code&gt; using &lt;code&gt;get&lt;/code&gt; does not return any value, but using square brackets causes the key to be initialized with an empty list:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; books_by_author &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; get_books_by_author(books)
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; books_by_author&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;get(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;inexistent key&amp;#39;&lt;/span&gt;)
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; books_by_author[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;inexistent key&amp;#39;&lt;/span&gt;]
+[]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;For this use case, &lt;code&gt;defaultdict&lt;/code&gt; is the fastest option, considering the &lt;code&gt;books&lt;/code&gt; list is big enough. If the books list is too small, then the overhead of creating a &lt;code&gt;defaultdict&lt;/code&gt; could make it perform even slower than other solutions.&lt;/p&gt;
+&lt;h2 id=&#34;wrapping-up&#34;&gt;Wrapping up&lt;/h2&gt;
+&lt;p&gt;There is no right or wrong on any of these solutions, you must analyze your use case to decide which one fits better.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;If you are not expecting to have many &lt;code&gt;KeyError&lt;/code&gt; exceptions since the dictionary might already be pre-populated, then using a &lt;code&gt;try/except&lt;/code&gt; block might be the best option.&lt;/li&gt;
+&lt;li&gt;If you just want to insert a default value for a single key outside of an iteration, then &lt;code&gt;setdefault&lt;/code&gt; might be just right.&lt;/li&gt;
+&lt;li&gt;If you want to use the same &lt;code&gt;default_factory&lt;/code&gt; to initialize multiple keys, then &lt;code&gt;defaultdict&lt;/code&gt; will probably be the fastest option.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;If you are unsure about which of these approaches will be faster, you can test how each of them perform using &lt;a href=&#34;https://docs.python.org/3.8/library/timeit.html&#34;&gt;timeit&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>Gradually formatting your codebase with black</title>
