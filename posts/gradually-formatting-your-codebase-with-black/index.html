@@ -196,11 +196,11 @@ if (!doNotTrack) {
 <h2 id="how-does-it-work">How does it work?<a href="#how-does-it-work" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <p>The Github Action just does one thing: runs black on the <strong>x</strong> least recently modified files.</p>
 <p>Example action that runs black on the 10 least recently modified files:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">- <span style="color:#66d9ef">name</span>: Apply Black Gradually
-  <span style="color:#66d9ef">uses</span>: rocioar/gradual-black-formatter@v1
-  <span style="color:#66d9ef">with</span>:
-    <span style="color:#66d9ef">number_of_files</span>: <span style="color:#ae81ff">10</span>
-    <span style="color:#66d9ef">ignore_files_regex</span>: <span style="color:#75715e">*test*,*migrations*</span>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">- <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Apply Black Gradually</span>
+  <span style="color:#f92672">uses</span>: <span style="color:#ae81ff">rocioar/gradual-black-formatter@v1</span>
+  <span style="color:#f92672">with</span>:
+    <span style="color:#f92672">number_of_files</span>: <span style="color:#ae81ff">10</span>
+    <span style="color:#f92672">ignore_files_regex</span>: <span style="color:#75715e">*test*,*migrations*</span>
 </code></pre></div><p>As you can see on the example above, it accepts two parameters:</p>
 <ul>
 <li><code>number_of_files</code> to indicate how many files you want <code>black</code> to format each time.</li>
@@ -215,37 +215,37 @@ if (!doNotTrack) {
 <li>Send a PR</li>
 </ol>
 <p>Here is an example workflow that uses <a href="https://github.com/actions/checkout">actions/checkout@v2</a> to checkout the code and <a href="https://github.com/peter-evans/create-pull-request">peter-evans/create-pull-request@v2</a> to make a commit and create a PR:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">name</span>: Apply Black Gradually
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">name</span>: <span style="color:#ae81ff">Apply Black Gradually</span>
 
-<span style="color:#66d9ef">on</span>:
-  <span style="color:#66d9ef">pull_request</span>:
-    <span style="color:#66d9ef">types</span>: [closed]
+<span style="color:#f92672">on</span>:
+  <span style="color:#f92672">pull_request</span>:
+    <span style="color:#f92672">types</span>: [<span style="color:#ae81ff">closed]</span>
 
-<span style="color:#66d9ef">jobs</span>:
-  <span style="color:#66d9ef">apply-black</span>:
-    <span style="color:#66d9ef">if</span>: github.head_ref == <span style="color:#e6db74">&#39;black&#39;</span>
-    <span style="color:#66d9ef">runs-on</span>: ubuntu-latest
-    <span style="color:#66d9ef">steps</span>:
-      - <span style="color:#66d9ef">uses</span>: actions/checkout@v2
-        <span style="color:#66d9ef">with</span>:
-          <span style="color:#66d9ef">ref</span>: master
-          <span style="color:#66d9ef">fetch-depth</span>: <span style="color:#ae81ff">0</span>
-      - <span style="color:#66d9ef">name</span>: Apply Black Gradually
-        <span style="color:#66d9ef">id</span>: black
-        <span style="color:#66d9ef">uses</span>: rocioar/gradual-black-formatter@v1
-        <span style="color:#66d9ef">with</span>:
-          <span style="color:#66d9ef">number_of_files</span>: <span style="color:#ae81ff">3</span>
-          <span style="color:#66d9ef">ignore_files_regex</span>: <span style="color:#75715e">*test*,*migrations*</span>
-      - <span style="color:#66d9ef">name</span>: Create Pull Request
-        <span style="color:#66d9ef">uses</span>: peter-evans/create-pull-request@v2
-        <span style="color:#66d9ef">with</span>:
-          <span style="color:#66d9ef">token</span>: ${{ secrets.GITHUB_TOKEN }}
-          <span style="color:#66d9ef">commit-message</span>: Apply black to ${{ steps.black.outputs.number_of_modified_files }} files
-          <span style="color:#66d9ef">committer</span>: GitHub &lt;noreply@github.com<span style="color:#e6db74">&gt;
-</span><span style="color:#e6db74">          author: ${{ github.actor }} &lt;${{ github.actor }}@users.noreply.github.com&gt;</span>
-          <span style="color:#66d9ef">title</span>: Apply black to ${{ steps.black.outputs.number_of_modified_files }} files
-          <span style="color:#66d9ef">body</span>: <span style="color:#e6db74">&#34;Auto-generated PR that applies black to: ${{ steps.black.outputs.modified_file_names }}.&#34;</span>
-          <span style="color:#66d9ef">branch</span>: black
+<span style="color:#f92672">jobs</span>:
+  <span style="color:#f92672">apply-black</span>:
+    <span style="color:#f92672">if</span>: <span style="color:#ae81ff">github.head_ref == &#39;black&#39;</span>
+    <span style="color:#f92672">runs-on</span>: <span style="color:#ae81ff">ubuntu-latest</span>
+    <span style="color:#f92672">steps</span>:
+      - <span style="color:#f92672">uses</span>: <span style="color:#ae81ff">actions/checkout@v2</span>
+        <span style="color:#f92672">with</span>:
+          <span style="color:#f92672">ref</span>: <span style="color:#ae81ff">master</span>
+          <span style="color:#f92672">fetch-depth</span>: <span style="color:#ae81ff">0</span>
+      - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Apply Black Gradually</span>
+        <span style="color:#f92672">id</span>: <span style="color:#ae81ff">black</span>
+        <span style="color:#f92672">uses</span>: <span style="color:#ae81ff">rocioar/gradual-black-formatter@v1</span>
+        <span style="color:#f92672">with</span>:
+          <span style="color:#f92672">number_of_files</span>: <span style="color:#ae81ff">3</span>
+          <span style="color:#f92672">ignore_files_regex</span>: <span style="color:#75715e">*test*,*migrations*</span>
+      - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Create Pull Request</span>
+        <span style="color:#f92672">uses</span>: <span style="color:#ae81ff">peter-evans/create-pull-request@v2</span>
+        <span style="color:#f92672">with</span>:
+          <span style="color:#f92672">token</span>: <span style="color:#ae81ff">${{ secrets.GITHUB_TOKEN }}</span>
+          <span style="color:#f92672">commit-message</span>: <span style="color:#ae81ff">Apply black to ${{ steps.black.outputs.number_of_modified_files }} files</span>
+          <span style="color:#f92672">committer</span>: <span style="color:#ae81ff">GitHub &lt;noreply@github.com&gt;</span>
+          <span style="color:#f92672">author</span>: <span style="color:#ae81ff">${{ github.actor }} &lt;${{ github.actor }}@users.noreply.github.com&gt;</span>
+          <span style="color:#f92672">title</span>: <span style="color:#ae81ff">Apply black to ${{ steps.black.outputs.number_of_modified_files }} files</span>
+          <span style="color:#f92672">body</span>: <span style="color:#e6db74">&#34;Auto-generated PR that applies black to: ${{ steps.black.outputs.modified_file_names }}.&#34;</span>
+          <span style="color:#f92672">branch</span>: <span style="color:#ae81ff">black</span>
 </code></pre></div><p><strong>Important Note</strong></p>
 <p>If you want the files to be formatted in order starting from the least recently modified files, make sure you pass <code>fetch-depth: 0</code> to the checkout action so that all the revision history is retrieved.</p>
 <h3 id="when-will-the-action-be-executed">When will the action be executed?<a href="#when-will-the-action-be-executed" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
@@ -288,7 +288,7 @@ if (!doNotTrack) {
         
         <span class="button next">
             <a href="/posts/simplied-django-tests-with-pytest-and-pytest-factoryboy/">
-                <span class="button__text">Simplied Django Tests With Pytest and Pytest FactoryBoy</span>
+                <span class="button__text">Simplified Django Tests With Pytest and Pytest FactoryBoy</span>
                 <span class="button__icon">→</span>
             </a>
         </span>

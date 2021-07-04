@@ -13,7 +13,7 @@
     
     
     <item>
-      <title>Simplied Django Tests With Pytest and Pytest FactoryBoy</title>
+      <title>Simplified Django Tests With Pytest and Pytest FactoryBoy</title>
       <link>/posts/simplied-django-tests-with-pytest-and-pytest-factoryboy/</link>
       <pubDate>Sun, 17 May 2020 00:00:00 +0000</pubDate>
       
@@ -27,7 +27,7 @@
 &lt;/ul&gt;
 &lt;h2 id=&#34;the-problem&#34;&gt;The Problem&lt;/h2&gt;
 &lt;p&gt;Let&amp;rsquo;s look through an example to understand what we are trying to fix.&lt;/p&gt;
-&lt;p&gt;We will write a test case for the following function which returns a list of &lt;code&gt;Post&lt;/code&gt;&#39;s titles:&lt;/p&gt;
+&lt;p&gt;We will write a test case for the following function which returns a list of &lt;code&gt;Post&lt;/code&gt;&amp;rsquo;s titles:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;get_posts_titles&lt;/span&gt;(include_unpublished&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;False):
     queryset &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;objects&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;all()
     &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;not&lt;/span&gt; include_unpublished:
@@ -105,7 +105,7 @@ register(PostFactory, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;draft_p
 &lt;li&gt;manually import the &lt;code&gt;PostFactory&lt;/code&gt; on the test file.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2 id=&#34;more-about-pytest-factoryboy&#34;&gt;More about pytest-factoryboy&lt;/h2&gt;
-&lt;p&gt;Being able to register a factory as a fixture is just one of &lt;code&gt;pytest-factoryboy&lt;/code&gt;&#39;s features. Let&amp;rsquo;s see some more.&lt;/p&gt;
+&lt;p&gt;Being able to register a factory as a fixture is just one of &lt;code&gt;pytest-factoryboy&lt;/code&gt;&amp;rsquo;s features. Let&amp;rsquo;s see some more.&lt;/p&gt;
 &lt;h4 id=&#34;set-custom-attribute-values-for-you-model-fixtures&#34;&gt;Set custom attribute values for you model fixtures&lt;/h4&gt;
 &lt;p&gt;There will be some test cases in which you need to customize an attribute of your model fixture. You can easily do so using &lt;code&gt;pytest.mark.parametrize&lt;/code&gt;:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pytest

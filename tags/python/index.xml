@@ -117,11 +117,11 @@ Traceback (most recent call last):
 &lt;h2 id=&#34;how-does-it-work&#34;&gt;How does it work?&lt;/h2&gt;
 &lt;p&gt;The Github Action just does one thing: runs black on the &lt;strong&gt;x&lt;/strong&gt; least recently modified files.&lt;/p&gt;
 &lt;p&gt;Example action that runs black on the 10 least recently modified files:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;- &lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: Apply Black Gradually
-  &lt;span style=&#34;color:#66d9ef&#34;&gt;uses&lt;/span&gt;: rocioar/gradual-black-formatter@v1
-  &lt;span style=&#34;color:#66d9ef&#34;&gt;with&lt;/span&gt;:
-    &lt;span style=&#34;color:#66d9ef&#34;&gt;number_of_files&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;
-    &lt;span style=&#34;color:#66d9ef&#34;&gt;ignore_files_regex&lt;/span&gt;: &lt;span style=&#34;color:#75715e&#34;&gt;*test*,*migrations*&lt;/span&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;- &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;Apply Black Gradually&lt;/span&gt;
+  &lt;span style=&#34;color:#f92672&#34;&gt;uses&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;rocioar/gradual-black-formatter@v1&lt;/span&gt;
+  &lt;span style=&#34;color:#f92672&#34;&gt;with&lt;/span&gt;:
+    &lt;span style=&#34;color:#f92672&#34;&gt;number_of_files&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;ignore_files_regex&lt;/span&gt;: &lt;span style=&#34;color:#75715e&#34;&gt;*test*,*migrations*&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As you can see on the example above, it accepts two parameters:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;number_of_files&lt;/code&gt; to indicate how many files you want &lt;code&gt;black&lt;/code&gt; to format each time.&lt;/li&gt;
@@ -136,37 +136,37 @@ Traceback (most recent call last):
 &lt;li&gt;Send a PR&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;Here is an example workflow that uses &lt;a href=&#34;https://github.com/actions/checkout&#34;&gt;actions/checkout@v2&lt;/a&gt; to checkout the code and &lt;a href=&#34;https://github.com/peter-evans/create-pull-request&#34;&gt;peter-evans/create-pull-request@v2&lt;/a&gt; to make a commit and create a PR:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: Apply Black Gradually
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;Apply Black Gradually&lt;/span&gt;
 
-&lt;span style=&#34;color:#66d9ef&#34;&gt;on&lt;/span&gt;:
-  &lt;span style=&#34;color:#66d9ef&#34;&gt;pull_request&lt;/span&gt;:
-    &lt;span style=&#34;color:#66d9ef&#34;&gt;types&lt;/span&gt;: [closed]
+&lt;span style=&#34;color:#f92672&#34;&gt;on&lt;/span&gt;:
+  &lt;span style=&#34;color:#f92672&#34;&gt;pull_request&lt;/span&gt;:
+    &lt;span style=&#34;color:#f92672&#34;&gt;types&lt;/span&gt;: [&lt;span style=&#34;color:#ae81ff&#34;&gt;closed]&lt;/span&gt;
 
-&lt;span style=&#34;color:#66d9ef&#34;&gt;jobs&lt;/span&gt;:
-  &lt;span style=&#34;color:#66d9ef&#34;&gt;apply-black&lt;/span&gt;:
-    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;: github.head_ref == &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;black&amp;#39;&lt;/span&gt;
-    &lt;span style=&#34;color:#66d9ef&#34;&gt;runs-on&lt;/span&gt;: ubuntu-latest
-    &lt;span style=&#34;color:#66d9ef&#34;&gt;steps&lt;/span&gt;:
-      - &lt;span style=&#34;color:#66d9ef&#34;&gt;uses&lt;/span&gt;: actions/checkout@v2
-        &lt;span style=&#34;color:#66d9ef&#34;&gt;with&lt;/span&gt;:
-          &lt;span style=&#34;color:#66d9ef&#34;&gt;ref&lt;/span&gt;: master
-          &lt;span style=&#34;color:#66d9ef&#34;&gt;fetch-depth&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
-      - &lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: Apply Black Gradually
-        &lt;span style=&#34;color:#66d9ef&#34;&gt;id&lt;/span&gt;: black
-        &lt;span style=&#34;color:#66d9ef&#34;&gt;uses&lt;/span&gt;: rocioar/gradual-black-formatter@v1
-        &lt;span style=&#34;color:#66d9ef&#34;&gt;with&lt;/span&gt;:
-          &lt;span style=&#34;color:#66d9ef&#34;&gt;number_of_files&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;
-          &lt;span style=&#34;color:#66d9ef&#34;&gt;ignore_files_regex&lt;/span&gt;: &lt;span style=&#34;color:#75715e&#34;&gt;*test*,*migrations*&lt;/span&gt;
-      - &lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: Create Pull Request
-        &lt;span style=&#34;color:#66d9ef&#34;&gt;uses&lt;/span&gt;: peter-evans/create-pull-request@v2
-        &lt;span style=&#34;color:#66d9ef&#34;&gt;with&lt;/span&gt;:
-          &lt;span style=&#34;color:#66d9ef&#34;&gt;token&lt;/span&gt;: ${{ secrets.GITHUB_TOKEN }}
-          &lt;span style=&#34;color:#66d9ef&#34;&gt;commit-message&lt;/span&gt;: Apply black to ${{ steps.black.outputs.number_of_modified_files }} files
-          &lt;span style=&#34;color:#66d9ef&#34;&gt;committer&lt;/span&gt;: GitHub &amp;lt;noreply@github.com&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;gt;
-&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;          author: ${{ github.actor }} &amp;lt;${{ github.actor }}@users.noreply.github.com&amp;gt;&lt;/span&gt;
-          &lt;span style=&#34;color:#66d9ef&#34;&gt;title&lt;/span&gt;: Apply black to ${{ steps.black.outputs.number_of_modified_files }} files
-          &lt;span style=&#34;color:#66d9ef&#34;&gt;body&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Auto-generated PR that applies black to: ${{ steps.black.outputs.modified_file_names }}.&amp;#34;&lt;/span&gt;
-          &lt;span style=&#34;color:#66d9ef&#34;&gt;branch&lt;/span&gt;: black
+&lt;span style=&#34;color:#f92672&#34;&gt;jobs&lt;/span&gt;:
+  &lt;span style=&#34;color:#f92672&#34;&gt;apply-black&lt;/span&gt;:
+    &lt;span style=&#34;color:#f92672&#34;&gt;if&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;github.head_ref == &amp;#39;black&amp;#39;&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;runs-on&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;ubuntu-latest&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;steps&lt;/span&gt;:
+      - &lt;span style=&#34;color:#f92672&#34;&gt;uses&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;actions/checkout@v2&lt;/span&gt;
+        &lt;span style=&#34;color:#f92672&#34;&gt;with&lt;/span&gt;:
+          &lt;span style=&#34;color:#f92672&#34;&gt;ref&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;master&lt;/span&gt;
+          &lt;span style=&#34;color:#f92672&#34;&gt;fetch-depth&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+      - &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;Apply Black Gradually&lt;/span&gt;
+        &lt;span style=&#34;color:#f92672&#34;&gt;id&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;black&lt;/span&gt;
+        &lt;span style=&#34;color:#f92672&#34;&gt;uses&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;rocioar/gradual-black-formatter@v1&lt;/span&gt;
+        &lt;span style=&#34;color:#f92672&#34;&gt;with&lt;/span&gt;:
+          &lt;span style=&#34;color:#f92672&#34;&gt;number_of_files&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;
+          &lt;span style=&#34;color:#f92672&#34;&gt;ignore_files_regex&lt;/span&gt;: &lt;span style=&#34;color:#75715e&#34;&gt;*test*,*migrations*&lt;/span&gt;
+      - &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;Create Pull Request&lt;/span&gt;
+        &lt;span style=&#34;color:#f92672&#34;&gt;uses&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;peter-evans/create-pull-request@v2&lt;/span&gt;
+        &lt;span style=&#34;color:#f92672&#34;&gt;with&lt;/span&gt;:
+          &lt;span style=&#34;color:#f92672&#34;&gt;token&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;${{ secrets.GITHUB_TOKEN }}&lt;/span&gt;
+          &lt;span style=&#34;color:#f92672&#34;&gt;commit-message&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;Apply black to ${{ steps.black.outputs.number_of_modified_files }} files&lt;/span&gt;
+          &lt;span style=&#34;color:#f92672&#34;&gt;committer&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;GitHub &amp;lt;noreply@github.com&amp;gt;&lt;/span&gt;
+          &lt;span style=&#34;color:#f92672&#34;&gt;author&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;${{ github.actor }} &amp;lt;${{ github.actor }}@users.noreply.github.com&amp;gt;&lt;/span&gt;
+          &lt;span style=&#34;color:#f92672&#34;&gt;title&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;Apply black to ${{ steps.black.outputs.number_of_modified_files }} files&lt;/span&gt;
+          &lt;span style=&#34;color:#f92672&#34;&gt;body&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Auto-generated PR that applies black to: ${{ steps.black.outputs.modified_file_names }}.&amp;#34;&lt;/span&gt;
+          &lt;span style=&#34;color:#f92672&#34;&gt;branch&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;black&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;Important Note&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;If you want the files to be formatted in order starting from the least recently modified files, make sure you pass &lt;code&gt;fetch-depth: 0&lt;/code&gt; to the checkout action so that all the revision history is retrieved.&lt;/p&gt;
 &lt;h3 id=&#34;when-will-the-action-be-executed&#34;&gt;When will the action be executed?&lt;/h3&gt;
@@ -191,7 +191,7 @@ Traceback (most recent call last):
     </item>
     
     <item>
-      <title>Simplied Django Tests With Pytest and Pytest FactoryBoy</title>
+      <title>Simplified Django Tests With Pytest and Pytest FactoryBoy</title>
       <link>/posts/simplied-django-tests-with-pytest-and-pytest-factoryboy/</link>
       <pubDate>Sun, 17 May 2020 00:00:00 +0000</pubDate>
       
@@ -205,7 +205,7 @@ Traceback (most recent call last):
 &lt;/ul&gt;
 &lt;h2 id=&#34;the-problem&#34;&gt;The Problem&lt;/h2&gt;
 &lt;p&gt;Let&amp;rsquo;s look through an example to understand what we are trying to fix.&lt;/p&gt;
-&lt;p&gt;We will write a test case for the following function which returns a list of &lt;code&gt;Post&lt;/code&gt;&#39;s titles:&lt;/p&gt;
+&lt;p&gt;We will write a test case for the following function which returns a list of &lt;code&gt;Post&lt;/code&gt;&amp;rsquo;s titles:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;get_posts_titles&lt;/span&gt;(include_unpublished&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;False):
     queryset &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Post&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;objects&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;all()
     &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;not&lt;/span&gt; include_unpublished:
@@ -283,7 +283,7 @@ register(PostFactory, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;draft_p
 &lt;li&gt;manually import the &lt;code&gt;PostFactory&lt;/code&gt; on the test file.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2 id=&#34;more-about-pytest-factoryboy&#34;&gt;More about pytest-factoryboy&lt;/h2&gt;
-&lt;p&gt;Being able to register a factory as a fixture is just one of &lt;code&gt;pytest-factoryboy&lt;/code&gt;&#39;s features. Let&amp;rsquo;s see some more.&lt;/p&gt;
+&lt;p&gt;Being able to register a factory as a fixture is just one of &lt;code&gt;pytest-factoryboy&lt;/code&gt;&amp;rsquo;s features. Let&amp;rsquo;s see some more.&lt;/p&gt;
 &lt;h4 id=&#34;set-custom-attribute-values-for-you-model-fixtures&#34;&gt;Set custom attribute values for you model fixtures&lt;/h4&gt;
 &lt;p&gt;There will be some test cases in which you need to customize an attribute of your model fixture. You can easily do so using &lt;code&gt;pytest.mark.parametrize&lt;/code&gt;:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; pytest

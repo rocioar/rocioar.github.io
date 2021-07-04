@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   
-    <title>Simplied Django Tests With Pytest and Pytest FactoryBoy :: roschegel — Rocio&#39;s blog about programming.</title>
+    <title>Simplified Django Tests With Pytest and Pytest FactoryBoy :: roschegel — Rocio&#39;s blog about programming.</title>
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
@@ -54,10 +54,10 @@ if (!doNotTrack) {
 
 <meta property="og:locale" content="en" />
 <meta property="og:type" content="article" />
-<meta property="og:title" content="Simplied Django Tests With Pytest and Pytest FactoryBoy :: roschegel">
+<meta property="og:title" content="Simplified Django Tests With Pytest and Pytest FactoryBoy :: roschegel">
 <meta property="og:description" content="Lately, I&#39;ve been bothered by the amount of boilerplate on my Django application&#39;s test code. So, I decided to do some research and look for alternatives. On this blogpost I will take about pytest, factoryboy and how they can be combined." />
 <meta property="og:url" content="/posts/simplied-django-tests-with-pytest-and-pytest-factoryboy/" />
-<meta property="og:site_name" content="Simplied Django Tests With Pytest and Pytest FactoryBoy" />
+<meta property="og:site_name" content="Simplified Django Tests With Pytest and Pytest FactoryBoy" />
 
   
     <meta property="og:image" content="/img/favicon/blue.png">
@@ -167,7 +167,7 @@ if (!doNotTrack) {
     
 <div class="post">
   <h1 class="post-title">
-    <a href="/posts/simplied-django-tests-with-pytest-and-pytest-factoryboy/">Simplied Django Tests With Pytest and Pytest FactoryBoy</a></h1>
+    <a href="/posts/simplied-django-tests-with-pytest-and-pytest-factoryboy/">Simplified Django Tests With Pytest and Pytest FactoryBoy</a></h1>
   <div class="post-meta">
       
     <span class="post-date">
@@ -207,7 +207,7 @@ if (!doNotTrack) {
 </ul>
 <h2 id="the-problem">The Problem<a href="#the-problem" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <p>Let&rsquo;s look through an example to understand what we are trying to fix.</p>
-<p>We will write a test case for the following function which returns a list of <code>Post</code>'s titles:</p>
+<p>We will write a test case for the following function which returns a list of <code>Post</code>&rsquo;s titles:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_posts_titles</span>(include_unpublished<span style="color:#f92672">=</span>False):
     queryset <span style="color:#f92672">=</span> Post<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>all()
     <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> include_unpublished:
@@ -285,7 +285,7 @@ register(PostFactory, <span style="color:#e6db74">&#34;draft_post&#34;</span>, t
 <li>manually import the <code>PostFactory</code> on the test file.</li>
 </ul>
 <h2 id="more-about-pytest-factoryboy">More about pytest-factoryboy<a href="#more-about-pytest-factoryboy" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
-<p>Being able to register a factory as a fixture is just one of <code>pytest-factoryboy</code>'s features. Let&rsquo;s see some more.</p>
+<p>Being able to register a factory as a fixture is just one of <code>pytest-factoryboy</code>&rsquo;s features. Let&rsquo;s see some more.</p>
 <h4 id="set-custom-attribute-values-for-you-model-fixtures">Set custom attribute values for you model fixtures<a href="#set-custom-attribute-values-for-you-model-fixtures" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
 <p>There will be some test cases in which you need to customize an attribute of your model fixture. You can easily do so using <code>pytest.mark.parametrize</code>:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> pytest
